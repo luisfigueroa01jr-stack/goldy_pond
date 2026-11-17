@@ -1,0 +1,466 @@
+{
+  "materiales": [
+    {
+      "nombre": "Amarillo",
+      "color_lineal": [
+        1.0,
+        0.66539,
+        0.25818,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Amarillo claro",
+      "color_lineal": [
+        1.0,
+        0.7913,
+        0.35153,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Azul",
+      "color_lineal": [
+        0.03434,
+        0.21223,
+        0.3467,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Azul claro",
+      "color_lineal": [
+        0.13014,
+        0.45079,
+        0.59062,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Azul oscuro",
+      "color_lineal": [
+        0.05127,
+        0.09759,
+        0.21223,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Azul rey",
+      "color_lineal": [
+        0.13287,
+        0.20508,
+        0.43966,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Beige",
+      "color_lineal": [
+        0.88792,
+        0.69387,
+        0.46208,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Blanco",
+      "color_lineal": [
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Bronce",
+      "color_lineal": [
+        0.39676,
+        0.1912,
+        0.06301,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Café",
+      "color_lineal": [
+        0.25818,
+        0.09306,
+        0.04667,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Café claro",
+      "color_lineal": [
+        0.48515,
+        0.20156,
+        0.0865,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Café dorado",
+      "color_lineal": [
+        0.43415,
+        0.26636,
+        0.09531,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Café muy oscuro",
+      "color_lineal": [
+        0.07036,
+        0.02732,
+        0.01298,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Café oscuro",
+      "color_lineal": [
+        0.11697,
+        0.04817,
+        0.0319,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Café rojizo",
+      "color_lineal": [
+        0.25818,
+        0.05951,
+        0.03434,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Café.001",
+      "color_lineal": [
+        0.25818,
+        0.09306,
+        0.04667,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Crema",
+      "color_lineal": [
+        1.0,
+        0.80695,
+        0.58408,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Dorado",
+      "color_lineal": [
+        0.57112,
+        0.32314,
+        0.09084,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Dorado.001",
+      "color_lineal": [
+        0.57112,
+        0.32314,
+        0.09084,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Gris",
+      "color_lineal": [
+        0.21953,
+        0.16513,
+        0.27468,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Gris claro",
+      "color_lineal": [
+        0.39676,
+        0.32314,
+        0.43415,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Gris oscuro",
+      "color_lineal": [
+        0.10702,
+        0.0865,
+        0.15293,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Lila",
+      "color_lineal": [
+        0.47932,
+        0.25818,
+        0.5972,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Madera",
+      "color_lineal": [
+        0.14703,
+        0.06848,
+        0.02732,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Morado",
+      "color_lineal": [
+        0.22697,
+        0.13014,
+        0.36625,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Morado medio",
+      "color_lineal": [
+        0.13287,
+        0.09084,
+        0.17465,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Morado oscuro",
+      "color_lineal": [
+        0.05127,
+        0.0331,
+        0.07819,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Negro",
+      "color_lineal": [
+        0.01444,
+        0.01444,
+        0.02029,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Negro.001",
+      "color_lineal": [
+        0.01444,
+        0.01444,
+        0.02029,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Rojo claro",
+      "color_lineal": [
+        0.53948,
+        0.10224,
+        0.16203,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Rojo oscuro",
+      "color_lineal": [
+        0.38133,
+        0.04667,
+        0.0999,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Rojo oscuro.001",
+      "color_lineal": [
+        0.38133,
+        0.04667,
+        0.0999,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Rojo vino",
+      "color_lineal": [
+        0.16203,
+        0.02732,
+        0.06125,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Rojo vino.001",
+      "color_lineal": [
+        0.16203,
+        0.02732,
+        0.06125,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Rosa",
+      "color_lineal": [
+        0.70838,
+        0.13014,
+        0.33245,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Rosa claro",
+      "color_lineal": [
+        0.87137,
+        0.25415,
+        0.47353,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Rosa pastel",
+      "color_lineal": [
+        0.88792,
+        0.26636,
+        0.47353,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Turquesa",
+      "color_lineal": [
+        0.07819,
+        0.36625,
+        0.37626,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Verde",
+      "color_lineal": [
+        0.12744,
+        0.18116,
+        0.07036,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Verde claro",
+      "color_lineal": [
+        0.29614,
+        0.38133,
+        0.10946,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Verde musgo",
+      "color_lineal": [
+        0.09084,
+        0.14703,
+        0.07819,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Verde oscuro",
+      "color_lineal": [
+        0.0356,
+        0.07619,
+        0.05448,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    }
+  ]
+}

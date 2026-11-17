@@ -123,6 +123,17 @@ El diseño, modelado, animación, programación e implementación de las mecáni
 3. Usa la misma versión de Unity con la que se creó el proyecto (Unity Hub te la indicará).
 4. Abre la escena principal y presiona **Play**.
 
+## 🧱 Modelos de Blender
+
+- Originales editables en `Blender/` (Aldea, Subterraneo, Objetos, Cuadros); Unity usa los `.fbx` de `Assets/Models/` con la misma estructura.
+- Al importar, `Assets/Scripts/Editor/ImportarModelosBlender.cs` crea los materiales URP compartidos en `Assets/Materials/Paleta` (colores de `Blender/paleta_materiales.json`), los prefabs en `Assets/Prefabs` y las escenas `Aldea` y `Subterraneo` si no existen. No sobrescribe lo que ya exista. Menú manual: **Goldy Pond → Modelos de Blender → Actualizar materiales, prefabs y escenas**.
+- Para volver a exportar un modelo después de editarlo (mismo nombre, Unity lo actualiza):
+  ```bash
+  flatpak run org.blender.Blender -b "$PWD/Blender/Objetos/Llave.blend" \
+    --python "$PWD/Blender/exportar_fbx.py" -- "$PWD/Assets/Models/Objetos/Llave.fbx" "$PWD/Blender/paleta_materiales.json"
+  ```
+  Exportar a mano desde Blender también funciona, pero **sin** "Apply Transform" (gira mal los modelos que tienen Empties).
+
 ## 🎓 Créditos académicos
 
 Proyecto para la asignatura **Programación y animación 3D** (3-2A)
