@@ -915,5 +915,81 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: -5884998981568641423, guid: d5ecaf05c09dbd241bdff80439da0c64, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 86463548867697908}
+    - targetCorrespondingSourceObject: {fileID: 7543814209829585090, guid: d5ecaf05c09dbd241bdff80439da0c64, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3129298851735796785}
   m_SourcePrefab: {fileID: 100100000, guid: d5ecaf05c09dbd241bdff80439da0c64, type: 3}
+--- !u!1 &4434162667320603846 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7543814209829585090, guid: d5ecaf05c09dbd241bdff80439da0c64, type: 3}
+  m_PrefabInstance: {fileID: 6140742195728004100}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3129298851735796785
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4434162667320603846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa354f231b5208f1a3108f0dd2046db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Puerta
+  nombre: reja
+  anguloApertura: 100
+  duracion: 0.9
+  alejarseDelJugador: 1
+  invertirSentido: 0
+  abrirLejosDe: {fileID: 0}
+  calcularBisagra: 0
+  bisagraDelOtroLado: 0
+  objetoNecesario: 
+  enLaMano: 1
+  mensajeCerrada: "La puerta est\xE1 cerrada. Necesitas una llave"
+  abrirAlAcercarse: 1
+  distanciaCerradura: 2.2
+  gastarObjeto: 0
+  companeras:
+  - {fileID: 86463548867697908}
+  sonidoAbrir: {fileID: 0}
+  sonidoCerrar: {fileID: 0}
+--- !u!1 &8893488753420431989 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -5884998981568641423, guid: d5ecaf05c09dbd241bdff80439da0c64, type: 3}
+  m_PrefabInstance: {fileID: 6140742195728004100}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &86463548867697908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8893488753420431989}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa354f231b5208f1a3108f0dd2046db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Puerta
+  nombre: reja
+  anguloApertura: 100
+  duracion: 0.9
+  alejarseDelJugador: 1
+  invertirSentido: 0
+  abrirLejosDe: {fileID: 0}
+  calcularBisagra: 0
+  bisagraDelOtroLado: 0
+  objetoNecesario: 
+  enLaMano: 1
+  mensajeCerrada: "La puerta est\xE1 cerrada. Necesitas una llave"
+  abrirAlAcercarse: 1
+  distanciaCerradura: 2.2
+  gastarObjeto: 0
+  companeras:
+  - {fileID: 3129298851735796785}
+  sonidoAbrir: {fileID: 0}
+  sonidoCerrar: {fileID: 0}
