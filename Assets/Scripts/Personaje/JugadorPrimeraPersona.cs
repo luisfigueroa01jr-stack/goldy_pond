@@ -19,9 +19,11 @@ public class JugadorPrimeraPersona : MonoBehaviour
 
     [Header("Tamano (se aplica al darle Play)")]
     [Tooltip("Altura total del jugador en metros. Las puertas de las casas miden 1.76 m.")]
-    [Range(0.8f, 1.8f)] public float altura = 1.35f;
-    [Tooltip("Que tan ancho es (radio de la capsula). Las puertas miden 0.88 m de ancho.")]
-    [Range(0.15f, 0.4f)] public float radio = 0.25f;
+    [Range(0.8f, 1.8f)] public float estatura = 1.2f;
+    [Tooltip("Que tan ancho es (radio de la capsula). Mas delgado sube mejor la escalera de caracol del molino.")]
+    [Range(0.15f, 0.4f)] public float radioCapsula = 0.2f;
+    [Tooltip("Que tanto suaviza la camara al subir o bajar escalones (0 = sin suavizar).")]
+    [Range(0f, 30f)] public float suavizadoEscalones = 12f;
     [Tooltip("Que tan abajo de la coronilla van los ojos (la camara).")]
     [Range(0f, 0.3f)] public float ojosBajoCoronilla = 0.1f;
 
@@ -40,19 +42,25 @@ public class JugadorPrimeraPersona : MonoBehaviour
     [Tooltip("Radio alrededor de los pies para recoger objetos chiquitos en el suelo sin apuntarles exacto.")]
     public float radioCercano = 1.3f;
 
+    /// <summary>El jugador de la escena (lo usan las puertas con llave para saber si llegaste).</summary>
+    public static JugadorPrimeraPersona Instancia { get; private set; }
+
     CharacterController controller;
     Interactuable objetoCercano;
     string mensajeFallo;
     GameObject avisoRecoger;
     UnityEngine.UI.Text textoAviso;
+    UnityEngine.UI.Image iconoAviso;
     float tiempoMensajeFallo;
     InputAction accionMover, accionMirar, accionCorrer, accionSaltar;
     Vector3 velocidadPlano;
     float velocidadVertical;
     float pitch;
+    float alturaOjos, ultimaAltura, desfaseCamara;
 
     void Awake()
     {
+        Instancia = this;
         controller = GetComponent<CharacterController>();
         if (camara == null) camara = GetComponentInChildren<Camera>();
         AplicarTamano();
@@ -69,15 +77,19 @@ public class JugadorPrimeraPersona : MonoBehaviour
     /// <summary>Ajusta la capsula (pies en el mismo lugar) y la altura de la camara.</summary>
     void AplicarTamano()
     {
-        controller.height = altura;
-        controller.radius = Mathf.Min(radio, altura * 0.5f);
-        controller.center = new Vector3(0f, altura * 0.5f, 0f);
-        controller.stepOffset = Mathf.Min(controller.stepOffset, altura * 0.3f);
+        controller.height = estatura;
+        controller.radius = Mathf.Min(radioCapsula, estatura * 0.5f);
+        controller.center = new Vector3(0f, estatura * 0.5f, 0f);
+        // Los escalones del molino suben 24 cm: el paso maximo tiene que ser mayor.
+        controller.stepOffset = Mathf.Clamp(estatura * 0.3f, 0.3f, 0.4f);
+        alturaOjos = estatura - ojosBajoCoronilla;
         if (camara != null)
         {
             var p = camara.transform.localPosition;
-            camara.transform.localPosition = new Vector3(p.x, altura - ojosBajoCoronilla, p.z);
+            camara.transform.localPosition = new Vector3(p.x, alturaOjos, p.z);
+            if (camara.GetComponent<ObjetoEnMano>() == null) camara.gameObject.AddComponent<ObjetoEnMano>();
         }
+        ultimaAltura = transform.position.y;
     }
 
     void OnEnable()
@@ -93,6 +105,12 @@ public class JugadorPrimeraPersona : MonoBehaviour
 
     void Update()
     {
+        // Leyendo el libro: no te mueves, no giras la camara y no se ve el aviso.
+        if (PanelLectura.Bloqueando)
+        {
+            if (avisoRecoger != null) avisoRecoger.SetActive(false);
+            return;
+        }
         ManejarCursor();
         Mirar();
         Mover();
@@ -132,7 +150,7 @@ public class JugadorPrimeraPersona : MonoBehaviour
             if (Physics.SphereCast(ojos.position, 0.15f, ojos.forward, out var golpe, distanciaRecoger, ~0, QueryTriggerInteraction.Collide))
             {
                 var r = golpe.collider.GetComponentInParent<Interactuable>();
-                if (r != null) return r;
+                if (r != null && r.Disponible) return r;
             }
         }
 
@@ -142,7 +160,7 @@ public class JugadorPrimeraPersona : MonoBehaviour
         foreach (var col in Physics.OverlapSphere(centro, radioCercano, ~0, QueryTriggerInteraction.Collide))
         {
             var r = col.GetComponentInParent<Interactuable>();
-            if (r == null) continue;
+            if (r == null || !r.Disponible) continue;
             var hacia = Vector3.ProjectOnPlane(col.bounds.center - transform.position, Vector3.up);
             if (hacia.sqrMagnitude > 0.04f && Vector3.Dot(transform.forward, hacia.normalized) < 0.3f) continue; // detras de ti
             float d = hacia.sqrMagnitude;
@@ -163,6 +181,9 @@ public class JugadorPrimeraPersona : MonoBehaviour
         textoAviso.text = fallo
             ? mensajeFallo
             : $"<b>(E)</b>  {objetoCercano.TextoAccion}";
+        var icono = fallo ? null : objetoCercano.IconoAccion;
+        iconoAviso.sprite = icono;
+        iconoAviso.gameObject.SetActive(icono != null);
     }
 
     /// <summary>Crea la ventanita en el mismo Canvas de la barra, con el mismo marco dorado.</summary>
@@ -189,9 +210,24 @@ public class JugadorPrimeraPersona : MonoBehaviour
         var ajuste = avisoRecoger.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
         ajuste.padding = new RectOffset(26, 26, 10, 12);
         ajuste.childAlignment = TextAnchor.MiddleCenter;
+        ajuste.spacing = 12f;
+        ajuste.childControlWidth = ajuste.childControlHeight = true;
+        ajuste.childForceExpandWidth = ajuste.childForceExpandHeight = false;
         var tamano = avisoRecoger.AddComponent<UnityEngine.UI.ContentSizeFitter>();
         tamano.horizontalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
         tamano.verticalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
+
+        // Iconito opcional a la izquierda (ej. el ojo del libro).
+        var goIcono = new GameObject("Icono", typeof(RectTransform), typeof(UnityEngine.UI.LayoutElement));
+        goIcono.layer = avisoRecoger.layer;
+        goIcono.transform.SetParent(rt, false);
+        iconoAviso = goIcono.AddComponent<UnityEngine.UI.Image>();
+        iconoAviso.preserveAspect = true;
+        iconoAviso.raycastTarget = false;
+        var tamanoIcono = goIcono.GetComponent<UnityEngine.UI.LayoutElement>();
+        tamanoIcono.preferredWidth = 44f;
+        tamanoIcono.preferredHeight = 30f;
+        goIcono.SetActive(false);
 
         var go = new GameObject("Texto", typeof(RectTransform));
         go.layer = avisoRecoger.layer;
@@ -267,7 +303,39 @@ public class JugadorPrimeraPersona : MonoBehaviour
         }
         velocidadVertical += gravedad * Time.deltaTime;
 
+        bool estabaEnSuelo = controller.isGrounded;
         controller.Move((velocidadPlano + Vector3.up * velocidadVertical) * Time.deltaTime);
+
+        // Al bajar escalones: en vez de "brincar" de uno en uno, se pega al escalon de abajo.
+        if (estabaEnSuelo && !controller.isGrounded && velocidadVertical <= 0f)
+        {
+            var pies = transform.position + Vector3.up * (controller.radius + 0.05f);
+            if (Physics.SphereCast(pies, controller.radius * 0.9f, Vector3.down, out _,
+                                   controller.stepOffset + 0.1f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                controller.Move(Vector3.down * (controller.stepOffset + 0.1f));
+                velocidadVertical = -2f;
+            }
+        }
+
+        SuavizarCamara();
+    }
+
+    /// <summary>Cuando el cuerpo sube o baja de golpe un escalon, la camara lo sigue suave.</summary>
+    void SuavizarCamara()
+    {
+        float salto = transform.position.y - ultimaAltura;
+        ultimaAltura = transform.position.y;
+        if (camara == null) return;
+
+        if (suavizadoEscalones > 0f && controller.isGrounded && Mathf.Abs(salto) > 0.02f && Mathf.Abs(salto) < 0.5f)
+            desfaseCamara = Mathf.Clamp(desfaseCamara - salto, -0.45f, 0.45f);
+        desfaseCamara = suavizadoEscalones > 0f
+            ? Mathf.Lerp(desfaseCamara, 0f, 1f - Mathf.Exp(-suavizadoEscalones * Time.deltaTime))
+            : 0f;
+
+        var p = camara.transform.localPosition;
+        camara.transform.localPosition = new Vector3(p.x, alturaOjos + desfaseCamara, p.z);
     }
 
     Vector2 LeerMovimiento()

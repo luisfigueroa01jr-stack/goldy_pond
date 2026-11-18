@@ -40,6 +40,8 @@ public class BarraHerramientas : MonoBehaviour
     public float relleno = 18f;
     public float distanciaAbajo = 28f;
     public float tamanoLaurel = 92f;
+    [Tooltip("Los trigos/laureles a los lados de la barra.")]
+    public bool mostrarLaureles = false;
 
     [Header("Seleccion")]
     public int seleccionada = 0;
@@ -62,9 +64,21 @@ public class BarraHerramientas : MonoBehaviour
     void Awake()
     {
         Instancia = this;
+        if (!mostrarLaureles) QuitarLaureles();
         if (casillas.Length != numeroCasillas || Array.Exists(casillas, c => c == null || c.fondo == null))
             Construir();
         Refrescar(true);
+    }
+
+    /// <summary>Borra los laureles que ya estaban construidos en la escena.</summary>
+    public void QuitarLaureles()
+    {
+        for (int i = transform.childCount - 1; i >= 0; i--)
+        {
+            var hijo = transform.GetChild(i).gameObject;
+            if (!hijo.name.StartsWith("Laurel")) continue;
+            if (Application.isPlaying) Destroy(hijo); else DestroyImmediate(hijo);
+        }
     }
 
     void OnDestroy()
@@ -201,15 +215,8 @@ public class BarraHerramientas : MonoBehaviour
         var marco = CrearImagen("Marco", raiz, spriteMarco, Image.Type.Sliced);
         Estirar(marco.rectTransform);
 
-        // Laureles a los lados, un poco por fuera y hacia abajo, como en el diseno.
-        float altoLaurel = tamanoLaurel * 176f / 128f;
-        var izq = CrearImagen("Laurel izquierdo", raiz, spriteLaurel, Image.Type.Simple);
-        Colocar(izq.rectTransform, new Vector2(0f, 0f), new Vector2(-tamanoLaurel * 0.45f, -altoLaurel * 0.12f),
-                new Vector2(tamanoLaurel, altoLaurel), new Vector2(0.5f, 0f));
-        var der = CrearImagen("Laurel derecho", raiz, spriteLaurel, Image.Type.Simple);
-        Colocar(der.rectTransform, new Vector2(1f, 0f), new Vector2(tamanoLaurel * 0.45f, -altoLaurel * 0.12f),
-                new Vector2(tamanoLaurel, altoLaurel), new Vector2(0.5f, 0f));
-        der.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
+        // Laureles a los lados (apagados por defecto).
+        if (mostrarLaureles) CrearLaureles(raiz);
 
         casillas = new Casilla[numeroCasillas];
         for (int i = 0; i < numeroCasillas; i++)
@@ -242,6 +249,19 @@ public class BarraHerramientas : MonoBehaviour
         }
         seleccionada = Mathf.Clamp(seleccionada, 0, numeroCasillas - 1);
         Refrescar(true);
+    }
+
+    void CrearLaureles(RectTransform raiz)
+    {
+        float altoLaurel = tamanoLaurel * 176f / 128f;
+        var izq = CrearImagen("Laurel izquierdo", raiz, spriteLaurel, Image.Type.Simple);
+        Colocar(izq.rectTransform, new Vector2(0f, 0f), new Vector2(-tamanoLaurel * 0.45f, -altoLaurel * 0.12f),
+                new Vector2(tamanoLaurel, altoLaurel), new Vector2(0.5f, 0f));
+        var der = CrearImagen("Laurel derecho", raiz, spriteLaurel, Image.Type.Simple);
+        Colocar(der.rectTransform, new Vector2(1f, 0f), new Vector2(tamanoLaurel * 0.45f, -altoLaurel * 0.12f),
+                new Vector2(tamanoLaurel, altoLaurel), new Vector2(0.5f, 0f));
+        der.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
+
     }
 
     static Image CrearImagen(string nombre, Transform padre, Sprite sprite, Image.Type tipo)

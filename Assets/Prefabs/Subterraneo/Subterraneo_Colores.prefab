@@ -945,6 +945,15 @@ MonoBehaviour:
   duracion: 0.9
   alejarseDelJugador: 1
   invertirSentido: 0
+  abrirLejosDe: {fileID: 0}
+  calcularBisagra: 0
+  bisagraDelOtroLado: 0
+  objetoNecesario: 
+  enLaMano: 1
+  mensajeCerrada: "La puerta est\xE1 cerrada. Necesitas una llave"
+  abrirAlAcercarse: 1
+  distanciaCerradura: 2.2
+  gastarObjeto: 0
   companeras:
   - {fileID: 86463548867697908}
   sonidoAbrir: {fileID: 0}
@@ -971,6 +980,15 @@ MonoBehaviour:
   duracion: 0.9
   alejarseDelJugador: 1
   invertirSentido: 0
+  abrirLejosDe: {fileID: 0}
+  calcularBisagra: 0
+  bisagraDelOtroLado: 0
+  objetoNecesario: 
+  enLaMano: 1
+  mensajeCerrada: "La puerta est\xE1 cerrada. Necesitas una llave"
+  abrirAlAcercarse: 1
+  distanciaCerradura: 2.2
+  gastarObjeto: 0
   companeras:
   - {fileID: 3129298851735796785}
   sonidoAbrir: {fileID: 0}

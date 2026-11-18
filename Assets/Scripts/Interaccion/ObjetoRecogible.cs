@@ -23,6 +23,7 @@ public class ObjetoRecogible : Interactuable
         var barra = BarraHerramientas.Instancia;
         if (barra == null || !barra.Agregar(nombre, icono, cantidad))
             return false;
+        ObjetoEnMano.Registrar(nombre, gameObject); // para verlo en la mano y poder ponerlo en otros lados
         gameObject.SetActive(false);
         return true;
     }

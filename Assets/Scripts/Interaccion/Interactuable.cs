@@ -10,6 +10,12 @@ public abstract class Interactuable : MonoBehaviour
     /// <summary>Texto que va despues de "(E)" en el aviso, ej. "Abrir puerta".</summary>
     public abstract string TextoAccion { get; }
 
+    /// <summary>false = el jugador lo ignora (ej. un mecanismo que ya se uso).</summary>
+    public virtual bool Disponible => true;
+
+    /// <summary>Iconito que aparece a la izquierda del aviso (ej. un ojo para leer). null = sin icono.</summary>
+    public virtual Sprite IconoAccion => null;
+
     /// <summary>Mensaje que se muestra un momento si Interactuar devuelve false.</summary>
     public virtual string MensajeFallo => "";
 

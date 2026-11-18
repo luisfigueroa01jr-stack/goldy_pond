@@ -52,6 +52,24 @@ namespace GoldyPond.EditorTools
                         if (Arreglar(t.gameObject)) arreglados++;
             }
 
+            // La barra ya no lleva los laureles de los lados: los borra de las escenas abiertas.
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                var escena = SceneManager.GetSceneAt(i);
+                if (!escena.isLoaded) continue;
+                foreach (var raiz in escena.GetRootGameObjects())
+                    foreach (var barra in raiz.GetComponentsInChildren<BarraHerramientas>(true))
+                    {
+                        if (barra.mostrarLaureles) continue;
+                        bool tiene = false;
+                        foreach (Transform h in barra.transform) if (h.name.StartsWith("Laurel")) tiene = true;
+                        if (!tiene) continue;
+                        barra.QuitarLaureles();
+                        EditorSceneManager.MarkSceneDirty(escena);
+                        Debug.Log($"[Goldy Pond] Quite los laureles de la barra en '{escena.name}'. Guarda la escena (Ctrl+S).");
+                    }
+            }
+
             if (arreglados > 0 || avisar)
                 Debug.Log($"[Goldy Pond] {arreglados} objetos de la escena listos para recoger con E. Guarda la escena (Ctrl+S).");
         }
