@@ -111,9 +111,9 @@ namespace GoldyPond.EditorTools
             var jugador = new GameObject("Jugador");
             SceneManager.MoveGameObjectToScene(jugador, escena);
             var cc = jugador.AddComponent<CharacterController>();
-            cc.height = 1.7f;
-            cc.radius = 0.3f;
-            cc.center = new Vector3(0f, 0.85f, 0f);
+            cc.height = 1.35f;
+            cc.radius = 0.25f;
+            cc.center = new Vector3(0f, 0.675f, 0f);
             cc.stepOffset = 0.4f;
             cc.slopeLimit = 50f;
             cc.skinWidth = 0.04f;
@@ -126,7 +126,7 @@ namespace GoldyPond.EditorTools
             var ojos = new GameObject("Camara");
             ojos.tag = "MainCamera";
             ojos.transform.SetParent(jugador.transform, false);
-            ojos.transform.localPosition = new Vector3(0f, 1.6f, 0f);
+            ojos.transform.localPosition = new Vector3(0f, 1.25f, 0f);
             var camara = ojos.AddComponent<Camera>();
             camara.nearClipPlane = 0.05f;
             camara.farClipPlane = 500f;

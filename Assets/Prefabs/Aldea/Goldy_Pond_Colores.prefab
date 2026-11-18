@@ -16415,5 +16415,201 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6246074785295849865, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 616400402708594484}
+    - targetCorrespondingSourceObject: {fileID: 2245456369690260547, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3661517811400729425}
+    - targetCorrespondingSourceObject: {fileID: 1030563630045135557, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2306693526310747489}
+    - targetCorrespondingSourceObject: {fileID: -7440603404250796879, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4722455700862218235}
+    - targetCorrespondingSourceObject: {fileID: 7287566940334212889, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5584001234959482290}
+    - targetCorrespondingSourceObject: {fileID: 8384574953026169224, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4494004915285725038}
+    - targetCorrespondingSourceObject: {fileID: -5938279426914930509, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4425559293676221192}
   m_SourcePrefab: {fileID: 100100000, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+--- !u!1 &591507911038205062 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2245456369690260547, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+  m_PrefabInstance: {fileID: 1665210242109360325}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3661517811400729425
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 591507911038205062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa354f231b5208f1a3108f0dd2046db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Puerta
+  nombre: puerta
+  anguloApertura: 100
+  duracion: 0.9
+  alejarseDelJugador: 1
+  invertirSentido: 0
+  companeras: []
+  sonidoAbrir: {fileID: 0}
+  sonidoCerrar: {fileID: 0}
+--- !u!1 &1126367492589282420 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -7440603404250796879, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+  m_PrefabInstance: {fileID: 1665210242109360325}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4722455700862218235
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1126367492589282420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa354f231b5208f1a3108f0dd2046db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Puerta
+  nombre: puerta
+  anguloApertura: 100
+  duracion: 0.9
+  alejarseDelJugador: 1
+  invertirSentido: 0
+  companeras: []
+  sonidoAbrir: {fileID: 0}
+  sonidoCerrar: {fileID: 0}
+--- !u!1 &1824327066787662336 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1030563630045135557, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+  m_PrefabInstance: {fileID: 1665210242109360325}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2306693526310747489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1824327066787662336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa354f231b5208f1a3108f0dd2046db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Puerta
+  nombre: puerta
+  anguloApertura: 100
+  duracion: 0.9
+  alejarseDelJugador: 1
+  invertirSentido: 0
+  companeras: []
+  sonidoAbrir: {fileID: 0}
+  sonidoCerrar: {fileID: 0}
+--- !u!1 &4218462961946916982 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -5938279426914930509, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+  m_PrefabInstance: {fileID: 1665210242109360325}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4425559293676221192
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4218462961946916982}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa354f231b5208f1a3108f0dd2046db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Puerta
+  nombre: puerta
+  anguloApertura: 100
+  duracion: 0.9
+  alejarseDelJugador: 1
+  invertirSentido: 0
+  companeras: []
+  sonidoAbrir: {fileID: 0}
+  sonidoCerrar: {fileID: 0}
+--- !u!1 &4733986934182908236 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6246074785295849865, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+  m_PrefabInstance: {fileID: 1665210242109360325}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &616400402708594484
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4733986934182908236}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa354f231b5208f1a3108f0dd2046db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Puerta
+  nombre: puerta
+  anguloApertura: 100
+  duracion: 0.9
+  alejarseDelJugador: 1
+  invertirSentido: 0
+  companeras: []
+  sonidoAbrir: {fileID: 0}
+  sonidoCerrar: {fileID: 0}
+--- !u!1 &7153965377117380941 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8384574953026169224, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+  m_PrefabInstance: {fileID: 1665210242109360325}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4494004915285725038
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7153965377117380941}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa354f231b5208f1a3108f0dd2046db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Puerta
+  nombre: puerta
+  anguloApertura: 100
+  duracion: 0.9
+  alejarseDelJugador: 1
+  invertirSentido: 0
+  companeras: []
+  sonidoAbrir: {fileID: 0}
+  sonidoCerrar: {fileID: 0}
+--- !u!1 &8232193507868348380 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7287566940334212889, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
+  m_PrefabInstance: {fileID: 1665210242109360325}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5584001234959482290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8232193507868348380}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa354f231b5208f1a3108f0dd2046db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Puerta
+  nombre: puerta
+  anguloApertura: 100
+  duracion: 0.9
+  alejarseDelJugador: 1
+  invertirSentido: 0
+  companeras: []
+  sonidoAbrir: {fileID: 0}
+  sonidoCerrar: {fileID: 0}
