@@ -12,18 +12,36 @@ public class ObjetoRecogible : Interactuable
     [Tooltip("Imagen que aparece en la casilla de la barra.")]
     public Sprite icono;
     [Min(1)] public int cantidad = 1;
+    [Tooltip("Si ya traes uno igual en la barra, no deja recoger otro hasta que lo uses (ej. el engranaje).")]
+    public bool soloUnoALaVez;
+    [Tooltip("Lo que sale si intentas recoger otro teniendo ya uno. Vacio = mensaje automatico.")]
+    public string mensajeYaTienes = "";
+
+    string fallo = "La barra esta llena";
 
     public override string TextoAccion => $"Recoger <color=#FFDFA0>{nombre}</color>";
-    public override string MensajeFallo => "La barra esta llena";
+    public override string MensajeFallo => fallo;
     public override bool Interactuar(Transform jugador) => Recoger();
 
-    /// <summary>Lo guarda en la barra. Devuelve false si la barra esta llena.</summary>
+    /// <summary>Lo guarda en la barra. Devuelve false si la barra esta llena o ya traes uno (soloUnoALaVez).</summary>
     public bool Recoger()
     {
         var barra = BarraHerramientas.Instancia;
-        if (barra == null || !barra.Agregar(nombre, icono, cantidad))
+        if (barra == null) return false;
+        if (soloUnoALaVez && barra.Tiene(nombre))
+        {
+            fallo = string.IsNullOrEmpty(mensajeYaTienes)
+                ? $"Ya traes un {nombre.ToLower()}. Úsalo primero"
+                : mensajeYaTienes;
             return false;
+        }
+        if (!barra.Agregar(nombre, icono, cantidad))
+        {
+            fallo = "La barra esta llena";
+            return false;
+        }
         ObjetoEnMano.Registrar(nombre, gameObject); // para verlo en la mano y poder ponerlo en otros lados
+        EstadoJuego.MarcarRecogido(gameObject);     // para que no vuelva a aparecer al regresar a la escena
         gameObject.SetActive(false);
         return true;
     }

@@ -162,6 +162,12 @@ namespace GoldyPond.EditorTools
                 xz = new Vector3(0f, 0f, -11f);
                 mirarHacia = new Vector3(0f, 0f, 0.3f);
             }
+            else if (nombre == "Laberinto")
+            {
+                // En el pasillo de la entrada (zona 1), mirando hacia adentro.
+                xz = new Vector3(0f, 0f, -11.4f);
+                mirarHacia = Vector3.zero;
+            }
             else
             {
                 var vista = SceneView.lastActiveSceneView;

@@ -55,7 +55,11 @@ public class Puerta : Interactuable
     public AudioClip sonidoAbrir;
     public AudioClip sonidoCerrar;
 
+    [Tooltip("La controla otro script (ej. el elevador): no se puede abrir ni cerrar con E y no sale aviso.")]
+    public bool bloqueada;
+
     public bool Abierta { get; private set; }
+    public override bool Disponible => !bloqueada;
     public bool ConSeguro => !string.IsNullOrEmpty(objetoNecesario) && !desbloqueada;
 
     bool desbloqueada;
@@ -147,6 +151,17 @@ public class Puerta : Interactuable
         return enLaMano ? barra.ObjetoSeleccionado == objetoNecesario : barra.Tiene(objetoNecesario);
     }
 
+    /// <summary>true si esta puerta tiene cerradura (aunque ya se haya abierto con la llave).</summary>
+    public bool ConCerradura => !string.IsNullOrEmpty(objetoNecesario);
+
+    /// <summary>La deja sin seguro sin gastar la llave (al volver a la escena, si ya la habias abierto).</summary>
+    public void QuitarSeguro()
+    {
+        desbloqueada = true;
+        foreach (var c in companeras ?? new Puerta[0])
+            if (c != null) c.desbloqueada = true;
+    }
+
     void Desbloquear()
     {
         desbloqueada = true;
@@ -184,9 +199,22 @@ public class Puerta : Interactuable
         if (clip != null) AudioSource.PlayClipAtPoint(clip, transform.position);
     }
 
+    /// <summary>Abre o cierra sin animacion (ej. el elevador que ya esta abierto al llegar). Tambien las companeras.</summary>
+    public void FijarAlInstante(bool abrir, Vector3 desde)
+    {
+        Fijar(abrir, desde);
+        progreso = 1f;
+        anguloActual = anguloHasta;
+        var giro = Quaternion.AngleAxis(anguloActual, Vector3.up);
+        transform.SetPositionAndRotation(bisagra + giro * (posicionCerrada - bisagra), giro * rotacionCerrada);
+    }
+
+    /// <summary>Esta girando (abriendose o cerrandose).</summary>
+    public bool Moviendose => progreso < 1f;
+
     void Update()
     {
-        if (ConSeguro) RevisarCerradura();
+        if (ConSeguro && !bloqueada) RevisarCerradura();
 
         if (progreso >= 1f) return;
         progreso = Mathf.Min(1f, progreso + Time.deltaTime / duracion);

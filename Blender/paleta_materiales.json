@@ -56,6 +56,17 @@
       "metal": 0.0
     },
     {
+      "nombre": "Azul portal",
+      "color_lineal": [
+        0.07619,
+        0.38133,
+        1.0,
+        1.0
+      ],
+      "rugosidad": 0.85,
+      "metal": 0.0
+    },
+    {
       "nombre": "Azul rey",
       "color_lineal": [
         0.13287,
@@ -127,6 +138,17 @@
         0.43415,
         0.26636,
         0.09531,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Café medio",
+      "color_lineal": [
+        0.19462,
+        0.07619,
+        0.03689,
         1.0
       ],
       "rugosidad": 0.8,
@@ -243,6 +265,17 @@
       "metal": 0.0
     },
     {
+      "nombre": "Lavanda",
+      "color_lineal": [
+        0.2705,
+        0.14703,
+        0.39157,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
       "nombre": "Lila",
       "color_lineal": [
         0.47932,
@@ -273,6 +306,17 @@
         1.0
       ],
       "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Morado claro",
+      "color_lineal": [
+        0.32778,
+        0.15896,
+        1.0,
+        1.0
+      ],
+      "rugosidad": 0.85,
       "metal": 0.0
     },
     {
@@ -314,6 +358,17 @@
         0.01444,
         0.01444,
         0.02029,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Rojo",
+      "color_lineal": [
+        0.76815,
+        0.03434,
+        0.02956,
         1.0
       ],
       "rugosidad": 0.8,
@@ -424,6 +479,17 @@
         0.12744,
         0.18116,
         0.07036,
+        1.0
+      ],
+      "rugosidad": 0.8,
+      "metal": 0.0
+    },
+    {
+      "nombre": "Verde brillante",
+      "color_lineal": [
+        0.05613,
+        0.25818,
+        0.03071,
         1.0
       ],
       "rugosidad": 0.8,

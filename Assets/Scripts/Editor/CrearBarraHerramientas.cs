@@ -8,14 +8,14 @@ using UnityEngine.UI;
 namespace GoldyPond.EditorTools
 {
     /// <summary>
-    /// Pone la barra de herramientas (HUD con 5 casillas) abajo de la pantalla en Aldea y Subterraneo.
+    /// Pone la barra de herramientas (HUD con 5 casillas) abajo de la pantalla en Aldea, Subterraneo y Laberinto.
     /// Se aplica sola una vez por escena; despues se puede repetir desde el menu Goldy Pond > Interfaz.
     /// </summary>
     [InitializeOnLoad]
     public static class CrearBarraHerramientas
     {
         const string CarpetaSprites = "Assets/UI/Barra de herramientas";
-        static readonly string[] Escenas = { "Aldea", "Subterraneo" };
+        static readonly string[] Escenas = { "Aldea", "Subterraneo", "Laberinto" };
 
         // (nombre, borde 9-slice izquierda/abajo/derecha/arriba)
         static readonly (string archivo, Vector4 borde)[] Sprites =

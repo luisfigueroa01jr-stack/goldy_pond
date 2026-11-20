@@ -127,6 +127,19 @@ public class BarraHerramientas : MonoBehaviour
         AlCambiarSeleccion?.Invoke(indice);
     }
 
+    /// <summary>Pone directamente un objeto en una casilla (objeto vacio = casilla libre). Lo usa EstadoJuego al cambiar de escena.</summary>
+    public void Poner(int indice, string objeto, Sprite icono, int cantidad)
+    {
+        if (!Valida(indice)) return;
+        var c = casillas[indice];
+        bool vacia = string.IsNullOrEmpty(objeto) || cantidad <= 0;
+        c.objeto = vacia ? null : objeto;
+        c.cantidad = vacia ? 0 : cantidad;
+        c.icono.sprite = vacia ? null : icono;
+        Refrescar(false);
+        AlCambiarContenido?.Invoke();
+    }
+
     /// <summary>Guarda un objeto. Si ya existe se suma la cantidad. Devuelve false si la barra esta llena.</summary>
     public bool Agregar(string objeto, Sprite icono, int cantidad = 1)
     {

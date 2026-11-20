@@ -57,6 +57,36 @@ public class JugadorPrimeraPersona : MonoBehaviour
     float velocidadVertical;
     float pitch;
     float alturaOjos, ultimaAltura, desfaseCamara;
+    Vector2 entrada;
+    Escalera escalera;   // la escalera de mano a la que vas agarrado (null = caminando)
+    float tEscalera;     // 0 = hasta abajo, 1 = hasta arriba
+
+    /// <summary>WASD / stick izquierdo de este cuadro (y = adelante).</summary>
+    public Vector2 Entrada => entrada;
+    public bool Escalando => escalera != null;
+
+    /// <summary>
+    /// Lo usa el elevador: no te mueves ni usas E (solo miras), el cuerpo no choca
+    /// y otro script puede moverte con transform.position.
+    /// </summary>
+    public bool Inmovil
+    {
+        get => inmovil;
+        set
+        {
+            inmovil = value;
+            if (escalera != null) escalera = null;
+            controller.enabled = !value;
+            velocidadPlano = Vector3.zero;
+            velocidadVertical = value ? 0f : -2f;
+            ultimaAltura = transform.position.y;
+            if (value && avisoRecoger != null) avisoRecoger.SetActive(false);
+        }
+    }
+    bool inmovil;
+    public Escalera EscaleraActual => escalera;
+    /// <summary>0 = pie de la escalera, 1 = hasta arriba.</summary>
+    public float AlturaEnEscalera => tEscalera;
 
     void Awake()
     {
@@ -113,6 +143,7 @@ public class JugadorPrimeraPersona : MonoBehaviour
         }
         ManejarCursor();
         Mirar();
+        if (inmovil) { ultimaAltura = transform.position.y; return; }
         Mover();
         Interactuar();
     }
@@ -128,6 +159,15 @@ public class JugadorPrimeraPersona : MonoBehaviour
         bool presionoE = (teclado != null && teclado.eKey.wasPressedThisFrame)
                       || (control != null && control.buttonWest.wasPressedThisFrame);
 
+        // Sin nada enfrente, pero con un objeto que trae mensaje en la mano (el pergamino): mantener E para verlo.
+        var mensaje = objetoCercano == null ? MensajesObjetos.De(BarraHerramientas.Instancia?.ObjetoSeleccionado) : null;
+        if (mensaje != null && presionoE && Cursor.lockState == CursorLockMode.Locked)
+        {
+            PanelLectura.Abrir(mensaje, true);
+            if (avisoRecoger != null) avisoRecoger.SetActive(false);
+            return;
+        }
+
         if (objetoCercano != null && presionoE && Cursor.lockState == CursorLockMode.Locked)
         {
             if (!objetoCercano.Interactuar(transform))
@@ -138,7 +178,7 @@ public class JugadorPrimeraPersona : MonoBehaviour
             if (objetoCercano != null && !objetoCercano.isActiveAndEnabled) objetoCercano = null; // ya se recogio
         }
 
-        MostrarAviso();
+        MostrarAviso(mensaje != null);
     }
 
     /// <summary>Lo que tienes enfrente (rayo desde la camara) o, si no, lo mas cercano frente a tus pies.</summary>
@@ -169,19 +209,22 @@ public class JugadorPrimeraPersona : MonoBehaviour
         return mejor;
     }
 
-    void MostrarAviso()
+    static Sprite ojo;
+
+    void MostrarAviso(bool verMensaje)
     {
         bool fallo = Time.time < tiempoMensajeFallo;
-        bool mostrar = (objetoCercano != null || fallo) && Cursor.lockState == CursorLockMode.Locked;
+        bool mostrar = (objetoCercano != null || fallo || verMensaje) && Cursor.lockState == CursorLockMode.Locked;
         if (mostrar && avisoRecoger == null) CrearAviso();
         if (avisoRecoger == null) return;
 
         avisoRecoger.SetActive(mostrar);
         if (!mostrar) return;
-        textoAviso.text = fallo
-            ? mensajeFallo
-            : $"<b>(E)</b>  {objetoCercano.TextoAccion}";
-        var icono = fallo ? null : objetoCercano.IconoAccion;
+        if (ojo == null) ojo = Resources.Load<Sprite>("UI/Ojo");
+        textoAviso.text = fallo ? mensajeFallo
+            : objetoCercano != null ? $"<b>(E)</b>  {objetoCercano.TextoAccion}"
+            : "<b>(E)</b>  Ver <color=#FFDFA0>mensaje</color>";
+        var icono = fallo ? null : objetoCercano != null ? objetoCercano.IconoAccion : ojo;
         iconoAviso.sprite = icono;
         iconoAviso.gameObject.SetActive(icono != null);
     }
@@ -284,9 +327,82 @@ public class JugadorPrimeraPersona : MonoBehaviour
             camara.transform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
+    // ---------- Escalera de mano ----------
+
+    /// <summary>Te agarra a la escalera en la altura t (0 = abajo, 1 = arriba). Arriba ademas te voltea hacia ella.</summary>
+    public void EmpezarEscalar(Escalera e, float t)
+    {
+        if (e == null) return;
+        escalera = e;
+        tEscalera = Mathf.Clamp01(t);
+        velocidadPlano = Vector3.zero;
+        velocidadVertical = 0f;
+        controller.enabled = false; // en la escalera no choca: la sigue exacto
+        transform.position = PiesEnEscalera(tEscalera);
+        if (t >= 1f)
+        {
+            transform.rotation = Quaternion.LookRotation(-e.Frente, Vector3.up);
+            pitch = 0f;
+            if (camara != null) camara.transform.localRotation = Quaternion.identity;
+        }
+        ultimaAltura = transform.position.y;
+        desfaseCamara = 0f;
+    }
+
+    public void SoltarEscalera()
+    {
+        if (escalera == null) return;
+        transform.position += escalera.Frente * 0.1f; // un pasito hacia atras para no quedar metido
+        escalera = null;
+        controller.enabled = true;
+        velocidadVertical = -2f;
+        ultimaAltura = transform.position.y;
+    }
+
+    /// <summary>Pone al jugador en un lugar (al llegar de otra escena), mirando hacia "adelante".</summary>
+    public void Teletransportar(Vector3 pies, Vector3 adelante)
+    {
+        escalera = null;
+        controller.enabled = false;
+        transform.position = pies;
+        if (adelante.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(adelante, Vector3.up);
+        controller.enabled = true;
+        velocidadPlano = Vector3.zero;
+        velocidadVertical = -2f;
+        ultimaAltura = transform.position.y;
+    }
+
+    /// <summary>Donde van los pies: abajo pisando el suelo, arriba con los ojos a la altura de la punta.</summary>
+    Vector3 PiesEnEscalera(float t)
+    {
+        var abajo = escalera.Punto(0f);
+        var arriba = escalera.Punto(1f) - Vector3.up * (estatura * 0.85f);
+        return Vector3.Lerp(abajo, arriba, t);
+    }
+
+    void Escalar()
+    {
+        var abajo = escalera.Punto(0f);
+        var arriba = escalera.Punto(1f) - Vector3.up * (estatura * 0.85f);
+        float largo = Mathf.Max(0.5f, Vector3.Distance(abajo, arriba));
+
+        bool saltar = accionSaltar != null ? accionSaltar.WasPressedThisFrame()
+                    : Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
+        if (saltar) { SoltarEscalera(); return; }
+
+        // Hasta abajo y sigues bajando: te sueltas.
+        if (tEscalera <= 0f && entrada.y < -0.1f) { SoltarEscalera(); return; }
+
+        tEscalera = Mathf.Clamp01(tEscalera + entrada.y * escalera.velocidad * Time.deltaTime / largo);
+        transform.position = PiesEnEscalera(tEscalera);
+        ultimaAltura = transform.position.y;
+        desfaseCamara = 0f;
+    }
+
     void Mover()
     {
-        Vector2 entrada = LeerMovimiento();
+        entrada = LeerMovimiento();
+        if (escalera != null) { Escalar(); return; }
         bool corriendo = accionCorrer != null ? accionCorrer.IsPressed()
                        : Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed;
 
