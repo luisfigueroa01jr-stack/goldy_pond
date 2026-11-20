@@ -7,6 +7,8 @@ using UnityEngine.UI;
 /// dorado y un boton rojo con X arriba a la derecha. Se cierra con la X, con E o con Esc.
 /// Mientras esta abierto el jugador no se mueve ni gira la camara y se ve el cursor.
 /// Uso: PanelLectura.Abrir(sprite);
+/// Modo "mientras mantienes E" (el pergamino): PanelLectura.Abrir(sprite, true) — sin X ni cursor,
+/// y se cierra solo al soltar la E.
 /// </summary>
 public class PanelLectura : MonoBehaviour
 {
@@ -23,10 +25,16 @@ public class PanelLectura : MonoBehaviour
 
     CanvasGroup grupo;
     RectTransform hoja, botonX;
-    Image imagen;
+    Image imagen, fondo, marco;
+    Shadow sombra;
+    RectTransform rtImagen;
     float abiertoDesde;
+    bool sostener;
 
-    public static void Abrir(Sprite sprite)
+    public static void Abrir(Sprite sprite) => Abrir(sprite, false);
+
+    /// <summary>sostener = true: se ve solo mientras mantienes E (sin boton X ni cursor).</summary>
+    public static void Abrir(Sprite sprite, bool sostener)
     {
         if (sprite == null) { Debug.LogWarning("[Goldy Pond] El libro no tiene imagen asignada."); return; }
         if (instancia == null && !Crear()) return;
@@ -34,11 +42,21 @@ public class PanelLectura : MonoBehaviour
         var i = instancia;
         i.imagen.sprite = sprite;
         float aspecto = sprite.rect.width / sprite.rect.height;
-        i.hoja.sizeDelta = new Vector2(AltoImagen * aspecto + Marco * 2f, AltoImagen + Marco * 2f);
+        // Modo pergamino (sostener): solo la imagen, sin fondo oscuro, sin marco y sin sombra.
+        float m = sostener ? 0f : Marco;
+        i.fondo.enabled = !sostener;
+        i.marco.enabled = !sostener;
+        i.sombra.enabled = !sostener;
+        i.rtImagen.offsetMin = new Vector2(m, m);
+        i.rtImagen.offsetMax = new Vector2(-m, -m);
+        i.hoja.sizeDelta = new Vector2(AltoImagen * aspecto + m * 2f, AltoImagen + m * 2f);
         i.abiertoDesde = Time.unscaledTime;
+        i.sostener = sostener;
+        i.botonX.gameObject.SetActive(!sostener);
         i.gameObject.SetActive(true);
         i.transform.SetAsLastSibling();
 
+        if (sostener) return; // el cursor se queda escondido
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -60,12 +78,19 @@ public class PanelLectura : MonoBehaviour
         grupo.alpha = suave;
         hoja.localScale = Vector3.one * Mathf.Lerp(0.92f, 1f, suave);
 
+        var teclado = Keyboard.current;
+        var control = Gamepad.current;
+        if (sostener)
+        {
+            bool mantiene = (teclado != null && teclado.eKey.isPressed) || (control != null && control.buttonWest.isPressed);
+            if (!mantiene) Cerrar();
+            return;
+        }
+
         var mouse = Mouse.current;
         bool sobreX = mouse != null && RectTransformUtility.RectangleContainsScreenPoint(botonX, mouse.position.ReadValue(), null);
         botonX.localScale = Vector3.one * (sobreX ? 1.12f : 1f);
 
-        var teclado = Keyboard.current;
-        var control = Gamepad.current;
         bool cerrar = (teclado != null && (teclado.eKey.wasPressedThisFrame || teclado.escapeKey.wasPressedThisFrame))
                    || (control != null && (control.buttonWest.wasPressedThisFrame || control.buttonEast.wasPressedThisFrame))
                    || (sobreX && mouse.leftButton.wasPressedThisFrame);
@@ -140,6 +165,10 @@ public class PanelLectura : MonoBehaviour
         instancia.hoja = hoja;
         instancia.botonX = x;
         instancia.imagen = imagen;
+        instancia.fondo = oscuro;
+        instancia.marco = marco;
+        instancia.sombra = sombra;
+        instancia.rtImagen = rtImagen;
         raiz.gameObject.SetActive(false);
         return true;
     }

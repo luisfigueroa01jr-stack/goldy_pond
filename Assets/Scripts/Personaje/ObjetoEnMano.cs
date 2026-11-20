@@ -36,6 +36,25 @@ public class ObjetoEnMano : MonoBehaviour
         if (!string.IsNullOrEmpty(nombre) && original != null) originales[nombre] = original;
     }
 
+    /// <summary>
+    /// Antes de cambiar de escena: guarda una copia escondida de cada modelo registrado que no se borre
+    /// al cargar la otra escena, para seguir viendolo en la mano y poder ponerlo (ej. el engranaje).
+    /// </summary>
+    public static void ConservarModelos()
+    {
+        foreach (var nombre in new List<string>(originales.Keys))
+        {
+            var original = originales[nombre];
+            if (original == null || original.scene.name == "DontDestroyOnLoad") continue;
+            var copia = CrearCopia(nombre); // ya sale apagada y sin scripts
+            if (copia == null) continue;
+            copia.transform.SetParent(null, true);
+            copia.name = $"{nombre} (guardado)";
+            DontDestroyOnLoad(copia);
+            originales[nombre] = copia;
+        }
+    }
+
     /// <summary>Copia del modelo, sin colliders ni scripts, desactivada. null si nunca se recogio.</summary>
     public static GameObject CrearCopia(string nombre)
     {

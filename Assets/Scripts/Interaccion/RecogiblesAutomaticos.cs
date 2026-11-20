@@ -14,6 +14,8 @@ public static class RecogiblesAutomaticos
     static readonly string[] Objetos = { "Llave", "Engranaje", "Linterna", "Pergamino" };
     // "Llave" o "Llave (1)", pero no "Pergamino_Mesa" (ese es parte del escenario).
     static readonly Regex PatronNombre = new Regex(@"^(Llave|Engranaje|Linterna|Pergamino)( \(\d+\))?$");
+    // "Palanca", "Palanca (1)"... pero no el cuadro "Las tres palancas son la llave".
+    static readonly Regex PatronPalanca = new Regex(@"^Palanca( \(\d+\))?$");
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Iniciar()
@@ -33,6 +35,9 @@ public static class RecogiblesAutomaticos
         foreach (var raiz in escena.GetRootGameObjects())
             Buscar(raiz.transform, encontrados);
 
+        // Si vienes de otra escena: barra, objetos ya recogidos, engranajes puestos, puertas abiertas.
+        EstadoJuego.Restaurar(escena);
+
         var faltan = new List<string>();
         foreach (var n in Objetos)
             if (!encontrados.Exists(e => e.StartsWith(n))) faltan.Add(n);
@@ -44,6 +49,11 @@ public static class RecogiblesAutomaticos
 
     static void Buscar(Transform t, List<string> encontrados)
     {
+        if (PatronPalanca.IsMatch(t.name))
+        {
+            PrepararPalanca(t.gameObject);
+            return;
+        }
         var m = PatronNombre.Match(t.name);
         if (m.Success)
         {
@@ -52,6 +62,18 @@ public static class RecogiblesAutomaticos
         }
         for (int i = 0; i < t.childCount; i++)
             Buscar(t.GetChild(i), encontrados);
+    }
+
+    /// <summary>Le pone la caja (trigger, para que el rayo de la camara la detecte) y el componente Palanca.</summary>
+    static void PrepararPalanca(GameObject go)
+    {
+        if (go.GetComponentInChildren<Collider>(true) == null)
+        {
+            var caja = go.AddComponent<BoxCollider>();
+            caja.isTrigger = true;
+            AjustarCaja(caja);
+        }
+        if (go.GetComponent<Palanca>() == null) go.AddComponent<Palanca>();
     }
 
     /// <summary>Le pone collider y ObjetoRecogible si le faltan. Devuelve un resumen para el log.</summary>
@@ -67,6 +89,13 @@ public static class RecogiblesAutomaticos
             r.nombre = nombre;
         }
         if (r.icono == null) r.icono = Resources.Load<Sprite>($"Iconos/{nombre}");
+        // Hay dos engranajes: solo se puede traer uno a la vez, hasta ponerlo en el mecanismo del molino.
+        if (nombre == "Engranaje")
+        {
+            r.soloUnoALaVez = true;
+            if (string.IsNullOrEmpty(r.mensajeYaTienes))
+                r.mensajeYaTienes = "Ya traes un engranaje. Ponlo en el mecanismo primero";
+        }
 
         var estado = !go.activeInHierarchy ? "desactivado" : r.icono == null ? "listo, sin icono" : "listo";
         return $"{go.name} ({estado})";
