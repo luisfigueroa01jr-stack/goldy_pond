@@ -15,6 +15,10 @@ public class CambioEscena : Interactuable
     public string escenaDestino = "Subterraneo";
     [Tooltip("Id del PuntoLlegada de la otra escena donde apareces.")]
     public string llegada = "Escalera";
+    [Tooltip("Si esta puesto NO cambia de escena: te lleva a este punto de la misma escena (ej. el laberinto a un lado de la Aldea).")]
+    public Transform destinoEnEscena;
+    [Tooltip("Barra que dejas y barra que recuperas (ej. Aldea -> Laberinto). Vacio = la barra viaja completa.")]
+    public string inventarioDesde, inventarioHacia;
 
     [Header("Cuando aparece")]
     [Tooltip("Solo si esta trampilla ya esta abierta.")]
@@ -45,6 +49,15 @@ public class CambioEscena : Interactuable
     public override bool Interactuar(Transform jugador)
     {
         if (!Disponible) return false;
+        if (!string.IsNullOrEmpty(inventarioDesde) && !string.IsNullOrEmpty(inventarioHacia))
+            Inventarios.Cambiar(inventarioDesde, inventarioHacia);
+        if (destinoEnEscena != null)
+        {
+            var j = JugadorPrimeraPersona.Instancia;
+            if (j == null) return false;
+            j.Teletransportar(destinoEnEscena.position, Vector3.ProjectOnPlane(destinoEnEscena.forward, Vector3.up));
+            return true;
+        }
         cargando = true;
         EstadoJuego.Guardar();
         EstadoJuego.Llegada = llegada;

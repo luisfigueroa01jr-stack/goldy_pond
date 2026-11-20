@@ -14,7 +14,7 @@ public class Libro : Interactuable
 
     static Sprite ojo;
 
-    public override string TextoAccion => $"Leer <color=#FFDFA0>{nombre}</color>";
+    public override string TextoAccion => string.IsNullOrEmpty(nombre) ? "Leer" : $"Leer <color=#FFDFA0>{nombre}</color>";
     public override Sprite IconoAccion => ojo != null ? ojo : (ojo = Resources.Load<Sprite>("UI/Ojo"));
 
     public override bool Interactuar(Transform jugador)

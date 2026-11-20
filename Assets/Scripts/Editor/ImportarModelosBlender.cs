@@ -33,6 +33,14 @@ namespace GoldyPond.EditorTools
         {
             { "Goldy_Pond_Colores", "Aldea" },
             { "Subterraneo_Colores", "Subterraneo" },
+            { "laberinto_colores", "Laberinto" },
+        };
+
+        // Objetos grandes por los que se camina (no llevan la caja que envuelve todo):
+        // collider de malla en cada pieza, menos las que se nombran aqui (se atraviesan).
+        static readonly Dictionary<string, string[]> ConColliderDeMalla = new Dictionary<string, string[]>
+        {
+            { "Portal_Nocturno", new[] { "energia" } },
         };
 
         // Materiales que en las referencias son luz (ventanas, faroles, vidrio de la linterna).
@@ -40,6 +48,10 @@ namespace GoldyPond.EditorTools
         {
             { "Amarillo", new Color(1f, 0.78f, 0.45f) * 1.5f },
             { "Amarillo claro", new Color(1f, 0.827f, 0.478f) * 2f }, // #FFD37A, "Luz (emision)" de la linterna
+            { "Morado claro", new Color(0.608f, 0.435f, 1f) * 2f },   // #9B6FFF, orilla de la energia del portal nocturno
+            { "Azul portal", new Color(0.306f, 0.651f, 1f) * 2f },    // #4EA6FF, rayitos del portal nocturno
+            { "Rojo", new Color(0.890f, 0.204f, 0.188f) * 2f },       // #E33430, foco del mecanismo de los 3 pines (bloqueado)
+            { "Verde brillante", new Color(0.263f, 0.545f, 0.192f) * 2f }, // #438B31, foco (desbloqueado)
         };
 
         // Agua del lago del subterraneo: translucida.
@@ -285,6 +297,12 @@ namespace GoldyPond.EditorTools
                         | StaticEditorFlags.ReflectionProbeStatic;
                     foreach (var t in raiz.GetComponentsInChildren<Transform>(true))
                         GameObjectUtility.SetStaticEditorFlags(t.gameObject, estatico);
+                }
+                else if (ConColliderDeMalla.TryGetValue(nombre, out var sinCollider))
+                {
+                    foreach (var mf in raiz.GetComponentsInChildren<MeshFilter>(true))
+                        if (!sinCollider.Contains(mf.name))
+                            mf.gameObject.AddComponent<MeshCollider>().sharedMesh = mf.sharedMesh;
                 }
                 else
                 {

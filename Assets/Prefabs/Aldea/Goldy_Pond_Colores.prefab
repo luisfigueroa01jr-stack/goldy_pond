@@ -69,6 +69,7 @@ MonoBehaviour:
   texto: "Entrar al subterr\xE1neo"
   escenaDestino: Subterraneo
   llegada: Escalera
+  destinoEnEscena: {fileID: 0}
   trampilla: {fileID: 4158066285333324293}
   escalera: {fileID: 0}
   alturaMinima: 0.92
@@ -16645,6 +16646,7 @@ MonoBehaviour:
   companeras: []
   sonidoAbrir: {fileID: 0}
   sonidoCerrar: {fileID: 0}
+  bloqueada: 0
 --- !u!1 &1126367492589282420 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -7440603404250796879, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
@@ -16679,6 +16681,7 @@ MonoBehaviour:
   companeras: []
   sonidoAbrir: {fileID: 0}
   sonidoCerrar: {fileID: 0}
+  bloqueada: 0
 --- !u!1 &1531724921368545395 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -9052863797289795402, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
@@ -16751,6 +16754,7 @@ MonoBehaviour:
   companeras: []
   sonidoAbrir: {fileID: 0}
   sonidoCerrar: {fileID: 0}
+  bloqueada: 0
 --- !u!1 &2007877787314582932 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
@@ -16771,6 +16775,10 @@ MonoBehaviour:
   mensajes:
   - objeto: Pergamino
     imagen: {fileID: 21300000, guid: bfe4d4ba2fd4c8d918bb58e7143ea9fd, type: 3}
+  - objeto: Hoja
+    imagen: {fileID: 21300000, guid: e9bd1516e365a2645aea8de50c2a36f4, type: 3}
+  - objeto: Libro del laberinto
+    imagen: {fileID: 21300000, guid: 6574c3079e38aa88aaaaa29999de5114, type: 3}
 --- !u!1 &4218462961946916982 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -5938279426914930509, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
@@ -16805,6 +16813,7 @@ MonoBehaviour:
   companeras: []
   sonidoAbrir: {fileID: 0}
   sonidoCerrar: {fileID: 0}
+  bloqueada: 0
 --- !u!1 &4733986934182908236 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6246074785295849865, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
@@ -16839,6 +16848,7 @@ MonoBehaviour:
   companeras: []
   sonidoAbrir: {fileID: 0}
   sonidoCerrar: {fileID: 0}
+  bloqueada: 0
 --- !u!4 &5056164258756180917 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3371197764079357072, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
@@ -16878,6 +16888,7 @@ MonoBehaviour:
   companeras: []
   sonidoAbrir: {fileID: 0}
   sonidoCerrar: {fileID: 0}
+  bloqueada: 0
 --- !u!4 &6744963652104406441 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -3853129300133835412, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
@@ -16922,6 +16933,7 @@ MonoBehaviour:
   companeras: []
   sonidoAbrir: {fileID: 0}
   sonidoCerrar: {fileID: 0}
+  bloqueada: 0
 --- !u!1 &7675363216593217174 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -173285465596219821, guid: f87d59844d2651156945ff82f79dbcb2, type: 3}
@@ -17028,3 +17040,4 @@ MonoBehaviour:
   companeras: []
   sonidoAbrir: {fileID: 0}
   sonidoCerrar: {fileID: 0}
+  bloqueada: 0

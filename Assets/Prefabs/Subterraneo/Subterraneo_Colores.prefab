@@ -1221,6 +1221,7 @@ MonoBehaviour:
   texto: Subir a la Aldea
   escenaDestino: Aldea
   llegada: Trampilla
+  destinoEnEscena: {fileID: 0}
   trampilla: {fileID: 0}
   escalera: {fileID: 7142671193228972082}
   alturaMinima: 0.92
@@ -1299,6 +1300,10 @@ MonoBehaviour:
   mensajes:
   - objeto: Pergamino
     imagen: {fileID: 21300000, guid: bfe4d4ba2fd4c8d918bb58e7143ea9fd, type: 3}
+  - objeto: Hoja
+    imagen: {fileID: 21300000, guid: e9bd1516e365a2645aea8de50c2a36f4, type: 3}
+  - objeto: Libro del laberinto
+    imagen: {fileID: 21300000, guid: 6574c3079e38aa88aaaaa29999de5114, type: 3}
 --- !u!23 &6536384952490798760 stripped
 MeshRenderer:
   m_CorrespondingSourceObject: {fileID: -8102632110802429268, guid: d5ecaf05c09dbd241bdff80439da0c64, type: 3}
