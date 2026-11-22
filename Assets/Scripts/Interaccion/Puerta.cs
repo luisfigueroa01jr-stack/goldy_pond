@@ -196,7 +196,8 @@ public class Puerta : Interactuable
         progreso = 0f;
 
         var clip = abrir ? sonidoAbrir : sonidoCerrar;
-        if (clip != null) AudioSource.PlayClipAtPoint(clip, transform.position);
+        // El volumen sale del slider "Sonido de animacion" del menu de Opciones.
+        if (clip != null) AudioSource.PlayClipAtPoint(clip, transform.position, ConfiguracionSonido.VolumenAnimacion);
     }
 
     /// <summary>Abre o cierra sin animacion (ej. el elevador que ya esta abierto al llegar). Tambien las companeras.</summary>

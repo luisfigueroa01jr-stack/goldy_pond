@@ -23,13 +23,21 @@ public static class LaberintoAutomatico
     class Datos { public Transform raiz; public Bounds limites; }
     static readonly List<Datos> laberintos = new List<Datos>();
 
+    // Unity puede tener apagado "Reload Domain": sin esto, en el segundo Play se acordaba del laberinto
+    // del Play anterior y ya no le ponia puertas, cajones, luces ni el mecanismo.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void Reiniciar() => laberintos.Clear();
+
     public static void Preparar(Scene escena)
     {
         laberintos.RemoveAll(d => d.raiz == null);
         foreach (var r in escena.GetRootGameObjects())
             foreach (var t in r.GetComponentsInChildren<Transform>(true))
-                if (PatronRaiz.IsMatch(t.name) && !laberintos.Exists(d => d.raiz == t))
-                    Configurar(t);
+                if (PatronRaiz.IsMatch(t.name))
+                {
+                    laberintos.RemoveAll(d => d.raiz == t);
+                    Configurar(t); // solo agrega lo que falte
+                }
     }
 
     static void Configurar(Transform raiz)

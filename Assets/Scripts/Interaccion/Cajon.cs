@@ -56,17 +56,35 @@ public class Cajon : Interactuable
             var centro = o.transform.position;
             var ro = o.GetComponentInChildren<Renderer>();
             if (ro != null) centro = ro.bounds.center;
-            // Dentro de la huella del cajon (con 3 cm de margen) y a su altura (puede sobresalir un poco arriba).
-            bool dentro = centro.x > caja.min.x - 0.03f && centro.x < caja.max.x + 0.03f
-                       && centro.z > caja.min.z - 0.03f && centro.z < caja.max.z + 0.03f
-                       && centro.y > caja.min.y - 0.05f && centro.y < caja.max.y + 0.2f;
-            if (!dentro) continue;
+            if (!Contiene(caja, centro)) continue;
+            // Cajones apilados (escritorios): si el objeto tambien cae en otro cajon cuyo centro le queda
+            // mas cerca, es de ese otro (asi lo del cajon de enmedio no se lo queda el de abajo).
+            if (HayOtroMasCerca(caja, centro)) continue;
             o.transform.SetParent(transform, true);
             adentro.Add(o);
         }
         if (adentro.Count > 0)
             Debug.Log($"[Goldy Pond] {name}: adentro tiene {string.Join(", ", adentro.ConvertAll(o => o.name))}");
         Esconder(true);
+    }
+
+    /// <summary>Dentro de la huella del cajon (con 3 cm de margen) y a su altura (puede sobresalir un poco arriba).</summary>
+    static bool Contiene(Bounds caja, Vector3 centro) =>
+        centro.x > caja.min.x - 0.03f && centro.x < caja.max.x + 0.03f
+        && centro.z > caja.min.z - 0.03f && centro.z < caja.max.z + 0.03f
+        && centro.y > caja.min.y - 0.05f && centro.y < caja.max.y + 0.2f;
+
+    bool HayOtroMasCerca(Bounds caja, Vector3 centro)
+    {
+        float miDistancia = Mathf.Abs(caja.center.y - centro.y);
+        foreach (var otro in FindObjectsByType<Cajon>(FindObjectsInactive.Include))
+        {
+            if (otro == this) continue;
+            var r = otro.GetComponent<Renderer>();
+            if (r == null || !Contiene(r.bounds, centro)) continue;
+            if (Mathf.Abs(r.bounds.center.y - centro.y) < miDistancia) return true;
+        }
+        return false;
     }
 
     /// <summary>Con el cajon cerrado lo de adentro no se puede agarrar.</summary>

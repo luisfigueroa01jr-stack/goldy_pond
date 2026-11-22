@@ -1,3 +1,4 @@
+
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -5,15 +6,6 @@ using UnityEngine.SceneManagement;
 
 namespace GoldyPond.EditorTools
 {
-    /// <summary>
-    /// Cada vez que cambia la jerarquia (por ejemplo, al arrastrar un objeto a la escena) busca
-    /// copias de Llave, Engranaje, Linterna o Pergamino, vengan del .fbx (Assets/Models/Objetos)
-    /// o del prefab (Assets/Prefabs/Objetos), y si les falta les agrega:
-    ///  - un BoxCollider que envuelve el modelo (para que el rayo de la camara lo detecte)
-    ///  - ObjetoRecogible con su nombre e icono (para recogerlo con E).
-    /// Lo agrega en la escena: guarda la escena (Ctrl+S) para que se quede.
-    /// Tambien se puede correr a mano en Goldy Pond > Interaccion.
-    /// </summary>
     [InitializeOnLoad]
     public static class RecogiblesEnEscena
     {
@@ -111,7 +103,6 @@ namespace GoldyPond.EditorTools
             return cambio;
         }
 
-        /// <summary>"Llave" si la copia viene de Llave.fbx o Llave.prefab, si no null.</summary>
         static string NombreObjeto(GameObject go)
         {
             var ruta = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(go);
