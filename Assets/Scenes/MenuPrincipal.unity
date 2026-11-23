@@ -255,7 +255,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1015713890}
         m_TargetAssemblyTypeName: MenuPrincipal, Assembly-CSharp
-        m_MethodName: AbrirCreditos
+        m_MethodName: abrirCreditos
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -498,7 +498,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1015713890}
         m_TargetAssemblyTypeName: MenuPrincipal, Assembly-CSharp
-        m_MethodName: Jugar
+        m_MethodName: jugar
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1072,7 +1072,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1015713890}
         m_TargetAssemblyTypeName: MenuPrincipal, Assembly-CSharp
-        m_MethodName: CerrarPaneles
+        m_MethodName: cerrarPaneles
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1220,7 +1220,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1015713890}
         m_TargetAssemblyTypeName: MenuPrincipal, Assembly-CSharp
-        m_MethodName: Salir
+        m_MethodName: salir
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3052,7 +3052,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1015713890}
         m_TargetAssemblyTypeName: MenuPrincipal, Assembly-CSharp
-        m_MethodName: CerrarPaneles
+        m_MethodName: cerrarPaneles
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3200,7 +3200,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1015713890}
         m_TargetAssemblyTypeName: MenuPrincipal, Assembly-CSharp
-        m_MethodName: AbrirOpciones
+        m_MethodName: abrirOpciones
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

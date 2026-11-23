@@ -1,15 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Muestra frente a la camara (abajo a la derecha) el objeto que tienes seleccionado en la barra,
-/// como si el personaje lo trajera en la mano (sin mano). Si la casilla esta vacia no se ve nada.
-/// Al cambiar de casilla el objeto baja, se cambia y vuelve a subir. Se mueve un poquito al caminar.
-/// Va en la camara del jugador (JugadorPrimeraPersona lo agrega solo).
-///
-/// Los modelos salen de los objetos que recogiste (ObjetoRecogible los registra al recogerlos).
-/// Va muy cerca de la camara y chiquito, asi nunca se mete dentro de las paredes.
-/// </summary>
+// Muestra frente a la camara (abajo a la derecha) el objeto que tienes seleccionado en la barra,
+// como si el personaje lo trajera en la mano (sin mano). Si la casilla esta vacia no se ve nada.
+// Al cambiar de casilla el objeto baja, se cambia y vuelve a subir. Se mueve un poquito al caminar.
+// Va en la camara del jugador (JugadorPrimeraPersona lo agrega solo).
+// Los modelos salen de los objetos que recogiste (ObjetoRecogible los registra al recogerlos).
+// Va muy cerca de la camara y chiquito, asi nunca se mete dentro de las paredes.
 public class ObjetoEnMano : MonoBehaviour
 {
     [Tooltip("Donde va respecto a la camara (x derecha, y arriba, z al frente), en metros.")]
@@ -20,7 +17,7 @@ public class ObjetoEnMano : MonoBehaviour
     public float balanceo = 0.004f;
 
     // Giro de cada objeto para que se vea bien "agarrado".
-    static readonly Dictionary<string, Vector3> Giros = new Dictionary<string, Vector3>
+    private static readonly Dictionary<string, Vector3> Giros = new Dictionary<string, Vector3>
     {
         { "Llave", new Vector3(10f, -30f, -40f) },
         { "Engranaje", new Vector3(10f, -60f, 0f) },
@@ -28,26 +25,35 @@ public class ObjetoEnMano : MonoBehaviour
         { "Pergamino", new Vector3(10f, -30f, 70f) },
     };
 
-    static readonly Dictionary<string, GameObject> originales = new Dictionary<string, GameObject>();
+    private static readonly Dictionary<string, GameObject> originales = new Dictionary<string, GameObject>();
 
-    /// <summary>Guarda el objeto de la escena para poder hacer copias (en la mano, en el mecanismo...).</summary>
-    public static void Registrar(string nombre, GameObject original)
+    // Guarda el objeto de la escena para poder hacer copias (en la mano, en el mecanismo...).
+    public static void registrar(string nombre, GameObject original)
     {
-        if (!string.IsNullOrEmpty(nombre) && original != null) originales[nombre] = original;
+        if (!string.IsNullOrEmpty(nombre) && original != null)
+        {
+            originales[nombre] = original;
+        }
     }
 
-    /// <summary>
-    /// Antes de cambiar de escena: guarda una copia escondida de cada modelo registrado que no se borre
-    /// al cargar la otra escena, para seguir viendolo en la mano y poder ponerlo (ej. el engranaje).
-    /// </summary>
-    public static void ConservarModelos()
+    // Antes de cambiar de escena: guarda una copia escondida de cada modelo registrado que no se borre
+    // al cargar la otra escena, para seguir viendolo en la mano y poder ponerlo (ej. el engranaje).
+    public static void conservarModelos()
     {
-        foreach (var nombre in new List<string>(originales.Keys))
+        foreach (string nombre in new List<string>(originales.Keys))
         {
-            var original = originales[nombre];
-            if (original == null || original.scene.name == "DontDestroyOnLoad") continue;
-            var copia = CrearCopia(nombre); // ya sale apagada y sin scripts
-            if (copia == null) continue;
+            GameObject original = originales[nombre];
+            if (original == null || original.scene.name == "DontDestroyOnLoad")
+            {
+                continue;
+            }
+
+            GameObject copia = crearCopia(nombre); // ya sale apagada y sin scripts
+            if (copia == null)
+            {
+                continue;
+            }
+
             copia.transform.SetParent(null, true);
             copia.name = $"{nombre} (guardado)";
             DontDestroyOnLoad(copia);
@@ -55,103 +61,152 @@ public class ObjetoEnMano : MonoBehaviour
         }
     }
 
-    /// <summary>Copia del modelo, sin colliders ni scripts, desactivada. null si nunca se recogio.</summary>
-    public static GameObject CrearCopia(string nombre)
+    // Copia del modelo, sin colliders ni scripts, desactivada. null si nunca se recogio.
+    public static GameObject crearCopia(string nombre)
     {
-        if (string.IsNullOrEmpty(nombre) || !originales.TryGetValue(nombre, out var original) || original == null)
+        if (string.IsNullOrEmpty(nombre) || !originales.TryGetValue(nombre, out GameObject original) || original == null)
+        {
             return null;
+        }
+
         bool estabaActivo = original.activeSelf;
         original.SetActive(false); // asi la copia nace apagada y no corre nada al crearse
-        var copia = Instantiate(original);
+        GameObject copia = Instantiate(original);
         original.SetActive(estabaActivo);
         copia.name = $"{nombre} (copia)";
-        foreach (var c in copia.GetComponentsInChildren<Collider>(true)) DestroyImmediate(c);
-        foreach (var c in copia.GetComponentsInChildren<Rigidbody>(true)) DestroyImmediate(c);
-        foreach (var c in copia.GetComponentsInChildren<MonoBehaviour>(true)) DestroyImmediate(c);
+        foreach (Collider c in copia.GetComponentsInChildren<Collider>(true))
+        {
+            DestroyImmediate(c);
+        }
+
+        foreach (Rigidbody c in copia.GetComponentsInChildren<Rigidbody>(true))
+        {
+            DestroyImmediate(c);
+        }
+
+        foreach (MonoBehaviour c in copia.GetComponentsInChildren<MonoBehaviour>(true))
+        {
+            DestroyImmediate(c);
+        }
+
         return copia;
     }
 
-    Transform soporte;
-    GameObject modelo;
-    string nombreActual, nombreDeseado;
-    float subida;                 // 0 = escondido abajo, 1 = en su lugar
-    CharacterController cuerpo;
-    float fase;
+    private Transform soporte;
+    private GameObject modelo;
+    private string nombreActual, nombreDeseado;
+    private float subida;                 // 0 = escondido abajo, 1 = en su lugar
+    private CharacterController cuerpo;
+    private float fase;
 
-    void Awake()
+    private void Awake()
     {
         soporte = new GameObject("Objeto en la mano").transform;
         soporte.SetParent(transform, false);
         cuerpo = GetComponentInParent<CharacterController>();
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
-        var barra = BarraHerramientas.Instancia;
+        BarraHerramientas barra = BarraHerramientas.Instancia;
         nombreDeseado = barra != null ? barra.ObjetoSeleccionado : null;
-        if (string.IsNullOrEmpty(nombreDeseado)) nombreDeseado = null;
+        if (string.IsNullOrEmpty(nombreDeseado))
+        {
+            nombreDeseado = null;
+        }
 
         // Si cambio la casilla: primero baja, luego cambia el modelo y sube.
         if (nombreDeseado != nombreActual)
         {
             subida = Mathf.MoveTowards(subida, 0f, Time.deltaTime * 7f);
-            if (subida <= 0f || modelo == null) Cambiar(nombreDeseado);
+            if (subida <= 0f || modelo == null)
+            {
+                cambiarObjeto(nombreDeseado);
+            }
         }
         else if (modelo != null)
+        {
             subida = Mathf.MoveTowards(subida, 1f, Time.deltaTime * 5f);
+        }
 
-        if (modelo == null) return;
+        if (modelo == null)
+        {
+            return;
+        }
 
         // Balanceo al caminar.
         float velocidad = cuerpo != null ? new Vector2(cuerpo.velocity.x, cuerpo.velocity.z).magnitude : 0f;
         fase += Time.deltaTime * (6f + velocidad * 1.5f);
         float fuerza = Mathf.Clamp01(velocidad / 3f);
-        var bamboleo = new Vector3(Mathf.Cos(fase) * balanceo, Mathf.Abs(Mathf.Sin(fase)) * balanceo, 0f) * fuerza;
+        Vector3 bamboleo = new Vector3(Mathf.Cos(fase) * balanceo, Mathf.Abs(Mathf.Sin(fase)) * balanceo, 0f) * fuerza;
 
         float suave = 1f - Mathf.Pow(1f - subida, 3f);
         soporte.localPosition = posicion + bamboleo + Vector3.down * (0.09f * (1f - suave));
     }
 
-    void Cambiar(string nombre)
+    private void cambiarObjeto(string nombre)
     {
-        if (modelo != null) Destroy(modelo);
+        if (modelo != null)
+        {
+            Destroy(modelo);
+        }
+
         modelo = null;
         nombreActual = nombre;
         subida = 0f;
-        if (nombre == null) return;
+        if (nombre == null)
+        {
+            return;
+        }
 
-        modelo = CrearCopia(nombre);
-        if (modelo == null) return; // nunca se recogio en esta partida
+        modelo = crearCopia(nombre);
+        if (modelo == null)
+        {
+            return; // nunca se recogio en esta partida
+        }
 
-        var t = modelo.transform;
+        Transform t = modelo.transform;
         t.SetParent(soporte, false);
         t.localPosition = Vector3.zero;
-        t.localRotation = Quaternion.Euler(Giros.TryGetValue(nombre, out var giro) ? giro : new Vector3(10f, -30f, 0f));
+        t.localRotation = Quaternion.Euler(Giros.TryGetValue(nombre, out Vector3 giro) ? giro : new Vector3(10f, -30f, 0f));
         t.localScale = Vector3.one;
 
-        foreach (var r in modelo.GetComponentsInChildren<Renderer>(true))
+        foreach (Renderer r in modelo.GetComponentsInChildren<Renderer>(true))
         {
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             r.gameObject.layer = gameObject.layer;
         }
+
         modelo.SetActive(true);
 
         // Mismo tamano para todos y centrado en el soporte.
-        var b = Limites(modelo);
+        Bounds b = limites(modelo);
         float mayor = Mathf.Max(b.size.x, b.size.y, b.size.z);
-        if (mayor < 0.0001f) return;
+        if (mayor < 0.0001f)
+        {
+            return;
+        }
+
         float escala = tamano / mayor;
-        var centro = soporte.InverseTransformPoint(b.center);
+        Vector3 centro = soporte.InverseTransformPoint(b.center);
         t.localScale = Vector3.one * escala;
         t.localPosition = -centro * escala;
     }
 
-    public static Bounds Limites(GameObject go)
+    public static Bounds limites(GameObject go)
     {
-        var rs = go.GetComponentsInChildren<Renderer>();
-        if (rs.Length == 0) return new Bounds(go.transform.position, Vector3.zero);
-        var b = rs[0].bounds;
-        foreach (var r in rs) b.Encapsulate(r.bounds);
+        Renderer[] rs = go.GetComponentsInChildren<Renderer>();
+        if (rs.Length == 0)
+        {
+            return new Bounds(go.transform.position, Vector3.zero);
+        }
+
+        Bounds b = rs[0].bounds;
+        foreach (Renderer r in rs)
+        {
+            b.Encapsulate(r.bounds);
+        }
+
         return b;
     }
 }

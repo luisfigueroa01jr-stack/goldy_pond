@@ -1,9 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Puntitos de luz que flotan despacio sobre el fondo del menu, para que no se vea como una imagen quieta.
-/// </summary>
+// Puntitos de luz que flotan despacio sobre el fondo del menu, para que no se vea como una imagen quieta.
 [RequireComponent(typeof(RectTransform))]
 public class Luciernagas : MonoBehaviour
 {
@@ -13,13 +11,13 @@ public class Luciernagas : MonoBehaviour
     public float velocidadSubida = 18f;
     public Color color = new Color(1f, 0.88f, 0.55f, 1f);
 
-    RectTransform area;
-    RectTransform[] puntos;
-    Image[] imagenes;
-    float[] fase;
-    float[] vaiven;
+    private RectTransform area;
+    private RectTransform[] puntos;
+    private Image[] imagenes;
+    private float[] fase;
+    private float[] vaiven;
 
-    void Start()
+    private void Start()
     {
         area = (RectTransform)transform;
         puntos = new RectTransform[cantidad];
@@ -29,7 +27,7 @@ public class Luciernagas : MonoBehaviour
 
         for (int i = 0; i < cantidad; i++)
         {
-            var go = new GameObject("Luciernaga " + (i + 1), typeof(RectTransform), typeof(Image));
+            GameObject go = new GameObject("Luciernaga " + (i + 1), typeof(RectTransform), typeof(Image));
             go.transform.SetParent(transform, false);
             imagenes[i] = go.GetComponent<Image>();
             imagenes[i].sprite = imagen;
@@ -37,32 +35,36 @@ public class Luciernagas : MonoBehaviour
             puntos[i] = go.GetComponent<RectTransform>();
             float t = Random.Range(tamano.x, tamano.y);
             puntos[i].sizeDelta = new Vector2(t, t);
-            puntos[i].anchoredPosition = PosicionAlAzar(true);
+            puntos[i].anchoredPosition = posicionAlAzar(true);
             fase[i] = Random.Range(0f, 10f);
             vaiven[i] = Random.Range(10f, 30f);
         }
     }
 
-    Vector2 PosicionAlAzar(bool cualquierAltura)
+    private Vector2 posicionAlAzar(bool cualquierAltura)
     {
-        var r = area.rect;
+        Rect r = area.rect;
         float y = cualquierAltura ? Random.Range(r.yMin, r.yMax) : r.yMin - 20f;
         return new Vector2(Random.Range(r.xMin, r.xMax), y);
     }
 
-    void Update()
+    private void Update()
     {
         float dt = Time.unscaledDeltaTime;
         for (int i = 0; i < cantidad; i++)
         {
             fase[i] += dt;
-            var p = puntos[i].anchoredPosition;
+            Vector2 p = puntos[i].anchoredPosition;
             p.y += velocidadSubida * dt;
             p.x += Mathf.Sin(fase[i] * 0.8f) * vaiven[i] * dt;   // se mecen de lado a lado
-            if (p.y > area.rect.yMax + 20f) p = PosicionAlAzar(false);  // al salir por arriba vuelven a entrar por abajo
+            if (p.y > area.rect.yMax + 20f)
+            {
+                p = posicionAlAzar(false); // al salir por arriba vuelven a entrar por abajo
+            }
+
             puntos[i].anchoredPosition = p;
 
-            var c = color;
+            Color c = color;
             c.a = 0.35f + 0.65f * Mathf.Abs(Mathf.Sin(fase[i] * 1.3f));  // parpadean
             imagenes[i].color = c;
         }

@@ -4,20 +4,18 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Iluminacion de terror en la escena "Aldea" (incluye el laberinto, que esta dentro de la misma escena).
-/// ALDEA: noche de luna, penumbra azulada con sombras y niebla azul oscura que se traga lo lejano.
-/// LABERINTO (callejon de noche): penumbra gris, lamparas blancas frias que hacen charcos de luz fuertes,
-///   niebla ligera para ver el pasillo hasta el fondo, colores casi en gris con mas contraste.
-/// - Una luz muy tenue va con el jugador para que alcance a ver el suelo.
-/// - Con la Linterna seleccionada en la barra sale un cono de luz hacia donde miras y la niebla se abre.
-/// - CASAS Y MOLINO por dentro: luz calida (como de velas/faroles) con sombras, para que no se salga por las paredes;
-///   al entrar sube un poco la luz ambiente. Solo se encienden las que estan cerca del jugador.
-/// No cambia Aldea.unity: todo se aplica al darle Play y Unity lo regresa solo al salir de Play.
-/// </summary>
+// Iluminacion de terror en la escena "Aldea" (incluye el laberinto, que esta dentro de la misma escena).
+// ALDEA: noche de luna, penumbra azulada con sombras y niebla azul oscura que se traga lo lejano.
+// LABERINTO (callejon de noche): penumbra gris, lamparas blancas frias que hacen charcos de luz fuertes,
+// niebla ligera para ver el pasillo hasta el fondo, colores casi en gris con mas contraste.
+// - Una luz muy tenue va con el jugador para que alcance a ver el suelo.
+// - Con la Linterna seleccionada en la barra sale un cono de luz hacia donde miras y la niebla se abre.
+// - CASAS Y MOLINO por dentro: luz calida (como de velas/faroles) con sombras, para que no se salga por las paredes;
+// al entrar sube un poco la luz ambiente. Solo se encienden las que estan cerca del jugador.
+// No cambia Aldea.unity: todo se aplica al darle Play y Unity lo regresa solo al salir de Play.
 public class AldeaTerror : MonoBehaviour
 {
-    const string Escena = "Aldea";
+    private const string ESCENA = "Aldea";
 
     [Header("Aldea (noche de luna)")]
     public Color ambiente = new Color(0.045f, 0.052f, 0.085f);
@@ -81,74 +79,105 @@ public class AldeaTerror : MonoBehaviour
     [Tooltip("Las luces de adentro solo se prenden si el jugador esta a menos de estos metros (con la niebla no se ven mas lejos).")]
     public float distanciaEncendido = 25f;
 
-    class Interior { public string nombre; public Bounds dentro; public readonly List<Light> luces = new List<Light>(); }
-    readonly List<Interior> interiores = new List<Interior>();
-    bool interioresListos;
-    float mezclaInterior, mezclaAplicada = -1f;
-    static readonly System.Text.RegularExpressions.Regex PatronCasa =
+    private class Interior { public string nombre; public Bounds dentro; public readonly List<Light> luces = new List<Light>(); }
+    private readonly List<Interior> interiores = new List<Interior>();
+    private bool interioresListos;
+    private float mezclaInterior, mezclaAplicada = -1f;
+    private static readonly System.Text.RegularExpressions.Regex PatronCasa =
         new System.Text.RegularExpressions.Regex(@"^Casa_\d+$");
 
-    enum Zona { Ninguna, Aldea, Laberinto }
-    Zona zona = Zona.Ninguna;
-    float densidadActual;
-    bool primeraVez = true;
-    Camera camara;
-    Light tenue, linterna, luna, foco;
+    private enum Zona { Ninguna, Aldea, Laberinto }
+    private Zona zona = Zona.Ninguna;
+    private float densidadActual;
+    private bool primeraVez = true;
+    private Camera camara;
+    private Light tenue, linterna, luna, foco;
 
     // Lamparas del laberinto: luz, fuerza original, encendida o no, semilla del parpadeo.
-    readonly List<(Light luz, float fuerza, bool parpadea, float semilla)> lamparas =
+    private readonly List<(Light luz, float fuerza, bool parpadea, float semilla)> lamparas =
         new List<(Light, float, bool, float)>();
-    Volume efectoGris;
-    Transform laberintoPreparado;
+    private Volume efectoGris;
+    private Transform laberintoPreparado;
 
     // Linternas de la escena (sin recoger) y su brillo. El brillo NO va dentro de la linterna
     // para que no se copie al ponerla en la mano.
-    readonly List<(Transform objeto, Light luz)> brillos = new List<(Transform, Light)>();
-    static readonly System.Text.RegularExpressions.Regex PatronLinterna =
+    private readonly List<(Transform objeto, Light luz)> brillos = new List<(Transform, Light)>();
+    private static readonly System.Text.RegularExpressions.Regex PatronLinterna =
         new System.Text.RegularExpressions.Regex(@"^Linterna( \(\d+\))?$");
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    static void Iniciar()
+    private static void iniciar()
     {
-        SceneManager.sceneLoaded -= AlCargar;
-        SceneManager.sceneLoaded += AlCargar;
-        for (int i = 0; i < SceneManager.sceneCount; i++) Crear(SceneManager.GetSceneAt(i));
+        SceneManager.sceneLoaded -= alCargar;
+        SceneManager.sceneLoaded += alCargar;
+        for (int i = 0; i < SceneManager.sceneCount; i++)
+        {
+            crear(SceneManager.GetSceneAt(i));
+        }
     }
 
-    static void AlCargar(Scene escena, LoadSceneMode modo) => Crear(escena);
-
-    static void Crear(Scene escena)
+    private static void alCargar(Scene escena, LoadSceneMode modo)
     {
-        if (!escena.isLoaded || escena.name != Escena) return;
-        foreach (var r in escena.GetRootGameObjects())
-            if (r.GetComponent<AldeaTerror>() != null) return;
-        var go = new GameObject("Noche de terror");
+        crear(escena);
+    }
+
+    private static void crear(Scene escena)
+    {
+        if (!escena.isLoaded || escena.name != ESCENA)
+        {
+            return;
+        }
+
+        foreach (GameObject r in escena.GetRootGameObjects())
+        {
+            if (r.GetComponent<AldeaTerror>() != null)
+            {
+                return;
+            }
+        }
+
+        GameObject go = new GameObject("Noche de terror");
         SceneManager.MoveGameObjectToScene(go, escena);
         go.AddComponent<AldeaTerror>();
         Debug.Log("[Goldy Pond] Noche de terror en la Aldea");
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
-        var jugador = JugadorPrimeraPersona.Instancia;
-        if (jugador == null || jugador.camara == null) return;
-        if (camara != jugador.camara) Conectar(jugador.camara);
-
-        var raizLab = LaberintoAutomatico.RaizQueContiene(jugador.transform.position, out _);
-        var nueva = raizLab != null ? Zona.Laberinto : Zona.Aldea;
-        if (nueva != zona)
+        JugadorPrimeraPersona jugador = JugadorPrimeraPersona.Instancia;
+        if (jugador == null || jugador.camara == null)
         {
-            if (nueva == Zona.Laberinto) PrepararLamparas(raizLab);
-            Aplicar(nueva);
+            return;
         }
 
-        var barra = BarraHerramientas.Instancia;
+        if (camara != jugador.camara)
+        {
+            conectar(jugador.camara);
+        }
+
+        Transform raizLab = LaberintoAutomatico.raizQueContiene(jugador.transform.position, out _);
+        Zona nueva = raizLab != null ? Zona.Laberinto : Zona.Aldea;
+        if (nueva != zona)
+        {
+            if (nueva == Zona.Laberinto)
+            {
+                prepararLamparas(raizLab);
+            }
+
+            aplicarZona(nueva);
+        }
+
+        BarraHerramientas barra = BarraHerramientas.Instancia;
         bool conLinterna = barra != null && barra.ObjetoSeleccionado == "Linterna";
         linterna.enabled = conLinterna;
         foco.enabled = conLinterna;
-        ActualizarBrillos();
-        if (zona == Zona.Laberinto) ParpadearLamparas();
-        ActualizarInteriores(jugador.transform.position);
+        actualizarBrillos();
+        if (zona == Zona.Laberinto)
+        {
+            parpadearLamparas();
+        }
+
+        actualizarInteriores(jugador.transform.position);
 
         // La niebla se abre/cierra suave al sacar o guardar la linterna.
         float meta = zona == Zona.Laberinto
@@ -159,18 +188,18 @@ public class AldeaTerror : MonoBehaviour
         RenderSettings.fogDensity = densidadActual;
     }
 
-    void Aplicar(Zona z)
+    private void aplicarZona(Zona z)
     {
         bool lab = z == Zona.Laberinto;
         bool deGolpe = zona == Zona.Ninguna || zona != z; // al cruzar el portal cambia al instante
         zona = z;
 
-        var amb = lab ? ambienteLaberinto : ambiente;
-        var niebla = lab ? colorNieblaLaberinto : colorNiebla;
+        Color amb = lab ? ambienteLaberinto : ambiente;
+        Color niebla = lab ? colorNieblaLaberinto : colorNiebla;
 
         RenderSettings.skybox = null;
         RenderSettings.ambientMode = AmbientMode.Flat;
-        PonerAmbiente(amb);
+        ponerAmbiente(amb);
         RenderSettings.ambientIntensity = 1f;
         RenderSettings.reflectionIntensity = 0f;
         mezclaAplicada = -1f; // la mezcla de adentro se vuelve a poner
@@ -178,36 +207,58 @@ public class AldeaTerror : MonoBehaviour
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.ExponentialSquared;
         RenderSettings.fogColor = niebla;
-        if (deGolpe) primeraVez = true;
+        if (deGolpe)
+        {
+            primeraVez = true;
+        }
 
         camara.clearFlags = CameraClearFlags.SolidColor;
         camara.backgroundColor = niebla;
 
-        if (luna == null) CrearLuna();
+        if (luna == null)
+        {
+            crearLuna();
+        }
+
         luna.enabled = !lab;
 
         tenue.color = lab ? colorTenueLaberinto : colorTenue;
         tenue.intensity = lab ? intensidadTenueLaberinto : intensidadTenue;
         tenue.range = lab ? alcanceTenueLaberinto : alcanceTenue;
 
-        if (efectoGris == null) CrearEfectoGris();
+        if (efectoGris == null)
+        {
+            crearEfectoGris();
+        }
+
         efectoGris.weight = lab ? 1f : 0f;
-        var datos = camara.GetUniversalAdditionalCameraData();
-        if (datos != null) datos.renderPostProcessing = true;
+        UniversalAdditionalCameraData datos = camara.GetUniversalAdditionalCameraData();
+        if (datos != null)
+        {
+            datos.renderPostProcessing = true;
+        }
     }
 
-    void PrepararLamparas(Transform raiz)
+    private void prepararLamparas(Transform raiz)
     {
-        if (raiz == laberintoPreparado) return;
+        if (raiz == laberintoPreparado)
+        {
+            return;
+        }
+
         laberintoPreparado = raiz;
         lamparas.Clear();
-        var luces = raiz.GetComponentsInChildren<Light>(true);
+        Light[] luces = raiz.GetComponentsInChildren<Light>(true);
         // Orden fijo (por nombre) para que siempre queden encendidas las mismas.
-        System.Array.Sort(luces, (a, b) => string.CompareOrdinal(Ruta(a.transform), Ruta(b.transform)));
+        System.Array.Sort(luces, (a, b) => string.CompareOrdinal(ruta(a.transform), ruta(b.transform)));
         int i = 0;
-        foreach (var l in luces)
+        foreach (Light l in luces)
         {
-            if (l.type == LightType.Directional) continue;
+            if (l.type == LightType.Directional)
+            {
+                continue;
+            }
+
             bool parpadea = parpadeaUnaDeCada > 0 && i % parpadeaUnaDeCada == parpadeaUnaDeCada - 1;
             lamparas.Add((l, l.intensity, parpadea, Random.Range(0f, 100f)));
             l.enabled = true;
@@ -216,17 +267,25 @@ public class AldeaTerror : MonoBehaviour
             l.intensity *= fuerzaLamparas;
             i++;
         }
+
         Debug.Log($"[Goldy Pond] Laberinto de noche: {lamparas.Count} lamparas blancas.");
     }
 
-    static string Ruta(Transform t) => t.parent == null ? t.name : Ruta(t.parent) + "/" + t.name;
+    private static string ruta(Transform t)
+    {
+        return t.parent == null ? t.name : ruta(t.parent) + "/" + t.name;
+    }
 
-    void ParpadearLamparas()
+    private void parpadearLamparas()
     {
         float tiempo = Time.time;
         foreach (var (luz, fuerza, parpadea, semilla) in lamparas)
         {
-            if (luz == null || !parpadea) continue;
+            if (luz == null || !parpadea)
+            {
+                continue;
+            }
+
             // Zumbido + de vez en cuando se apaga un instante, como farol viejo.
             float zumbido = 0.85f + 0.15f * Mathf.PerlinNoise(tiempo * 6f, semilla);
             float corte = Mathf.PerlinNoise(tiempo * 1.1f, semilla + 50f) > 0.75f
@@ -235,35 +294,50 @@ public class AldeaTerror : MonoBehaviour
         }
     }
 
-    void CrearEfectoGris()
+    private void crearEfectoGris()
     {
-        var go = new GameObject("Efecto gris laberinto (terror)");
+        GameObject go = new GameObject("Efecto gris laberinto (terror)");
         go.transform.SetParent(transform, false);
         efectoGris = go.AddComponent<Volume>();
         efectoGris.isGlobal = true;
         efectoGris.priority = 50f;
-        var perfil = ScriptableObject.CreateInstance<VolumeProfile>();
-        var color = perfil.Add<ColorAdjustments>(true);
+        VolumeProfile perfil = ScriptableObject.CreateInstance<VolumeProfile>();
+        ColorAdjustments color = perfil.Add<ColorAdjustments>(true);
         color.saturation.Override(saturacion);
         color.contrast.Override(contraste);
-        var v = perfil.Add<Vignette>(true);
+        Vignette v = perfil.Add<Vignette>(true);
         v.intensity.Override(vineta);
         v.smoothness.Override(0.5f);
         efectoGris.profile = perfil;
         efectoGris.weight = 0f;
     }
 
-    void Conectar(Camera cam)
+    private void conectar(Camera cam)
     {
         camara = cam;
         zona = Zona.Ninguna; // se vuelve a aplicar con la camara nueva
-        if (tenue != null) Destroy(tenue.gameObject);
-        if (linterna != null) Destroy(linterna.gameObject);
-        if (foco != null) Destroy(foco.gameObject);
-        if (brillos.Count == 0) BuscarLinternas();
+        if (tenue != null)
+        {
+            Destroy(tenue.gameObject);
+        }
+
+        if (linterna != null)
+        {
+            Destroy(linterna.gameObject);
+        }
+
+        if (foco != null)
+        {
+            Destroy(foco.gameObject);
+        }
+
+        if (brillos.Count == 0)
+        {
+            buscarLinternas();
+        }
 
         // Luz tenue un poco arriba de los ojos: alumbra el suelo y lo que traes en la mano.
-        var goT = new GameObject("Luz tenue (terror)");
+        GameObject goT = new GameObject("Luz tenue (terror)");
         goT.transform.SetParent(cam.transform, false);
         goT.transform.localPosition = new Vector3(0f, 0.25f, 0f);
         tenue = goT.AddComponent<Light>();
@@ -271,7 +345,7 @@ public class AldeaTerror : MonoBehaviour
         tenue.shadows = LightShadows.None;
 
         // Cono de la linterna, sale de la mano derecha hacia donde miras.
-        var goL = new GameObject("Luz de la linterna (terror)");
+        GameObject goL = new GameObject("Luz de la linterna (terror)");
         goL.transform.SetParent(cam.transform, false);
         goL.transform.localPosition = new Vector3(0.1f, -0.08f, 0.15f);
         linterna = goL.AddComponent<Light>();
@@ -285,7 +359,7 @@ public class AldeaTerror : MonoBehaviour
         linterna.enabled = false;
 
         // Lucecita pegada a la linterna en la mano, para que se vea encendida.
-        var goF = new GameObject("Foco de la linterna (terror)");
+        GameObject goF = new GameObject("Foco de la linterna (terror)");
         goF.transform.SetParent(cam.transform, false);
         goF.transform.localPosition = new Vector3(0.095f, -0.06f, 0.2f);
         foco = goF.AddComponent<Light>();
@@ -297,15 +371,20 @@ public class AldeaTerror : MonoBehaviour
         foco.enabled = false;
     }
 
-    void BuscarLinternas()
+    private void buscarLinternas()
     {
-        foreach (var raiz in gameObject.scene.GetRootGameObjects())
-            foreach (var t in raiz.GetComponentsInChildren<Transform>(true))
+        foreach (GameObject raiz in gameObject.scene.GetRootGameObjects())
+        {
+            foreach (Transform t in raiz.GetComponentsInChildren<Transform>(true))
             {
-                if (!PatronLinterna.IsMatch(t.name)) continue;
-                var go = new GameObject($"Brillo de {t.name} (terror)");
+                if (!PatronLinterna.IsMatch(t.name))
+                {
+                    continue;
+                }
+
+                GameObject go = new GameObject($"Brillo de {t.name} (terror)");
                 go.transform.SetParent(transform, false);
-                var l = go.AddComponent<Light>();
+                Light l = go.AddComponent<Light>();
                 l.type = LightType.Point;
                 l.color = colorLinterna;
                 l.intensity = intensidadBrilloSuelo;
@@ -313,88 +392,127 @@ public class AldeaTerror : MonoBehaviour
                 l.shadows = LightShadows.None;
                 brillos.Add((t, l));
             }
+        }
     }
 
-    void ActualizarBrillos()
+    private void actualizarBrillos()
     {
         foreach (var (objeto, luz) in brillos)
         {
             bool ver = objeto != null && objeto.gameObject.activeInHierarchy;
             luz.enabled = ver;
-            if (!ver) continue;
-            var r = objeto.GetComponentInChildren<Renderer>();
-            var centro = r != null ? r.bounds.center : objeto.position;
+            if (!ver)
+            {
+                continue;
+            }
+
+            Renderer r = objeto.GetComponentInChildren<Renderer>();
+            Vector3 centro = r != null ? r.bounds.center : objeto.position;
             luz.transform.position = centro + Vector3.up * 0.35f;
             // Parpadeo suave, como foco viejo.
             luz.intensity = intensidadBrilloSuelo * (0.85f + 0.15f * Mathf.PerlinNoise(Time.time * 3f, 0.5f));
         }
     }
 
-    static void PonerAmbiente(Color amb)
+    private static void ponerAmbiente(Color amb)
     {
         RenderSettings.ambientLight = amb;
-        var sh = new SphericalHarmonicsL2();
+        SphericalHarmonicsL2 sh = new SphericalHarmonicsL2();
         sh.AddAmbientLight(amb);
         RenderSettings.ambientProbe = sh;
     }
 
-    // ---------- Casas y molino por dentro ----------
+    // ------------------- CASAS Y MOLINO POR DENTRO ------------------------------
 
-    void PrepararInteriores()
+    private void prepararInteriores()
     {
         interioresListos = true;
-        foreach (var raiz in gameObject.scene.GetRootGameObjects())
-            foreach (var t in raiz.GetComponentsInChildren<Transform>(true))
+        foreach (GameObject raiz in gameObject.scene.GetRootGameObjects())
+        {
+            foreach (Transform t in raiz.GetComponentsInChildren<Transform>(true))
             {
-                if (PatronCasa.IsMatch(t.name)) PrepararCasa(t);
-                else if (t.name == "Molino") PrepararMolino(t);
+                if (PatronCasa.IsMatch(t.name))
+                {
+                    prepararCasa(t);
+                }
+                else if (t.name == "Molino")
+                {
+                    prepararMolino(t);
+                }
             }
-        int n = 0; foreach (var i in interiores) n += i.luces.Count;
+        }
+
+        int n = 0; foreach (Interior i in interiores)
+        {
+            n += i.luces.Count;
+        }
+
         Debug.Log($"[Goldy Pond] Interiores iluminados: {interiores.Count} ({n} luces).");
     }
 
-    void PrepararCasa(Transform casa)
+    private void prepararCasa(Transform casa)
     {
-        if (!LimitesDeHijos(casa, "Pared", out var paredes)) return;
-        float suelo = LimitesDeHijos(casa, "Suelo", out var s) ? s.max.y : paredes.min.y;
-        var centro = paredes.center;
-        var interior = new Interior { nombre = casa.name };
+        if (!limitesDeHijos(casa, "Pared", out Bounds paredes))
+        {
+            return;
+        }
+
+        float suelo = limitesDeHijos(casa, "Suelo", out Bounds s) ? s.max.y : paredes.min.y;
+        Vector3 centro = paredes.center;
+        Interior interior = new Interior { nombre = casa.name };
         interior.dentro = new Bounds(new Vector3(centro.x, (suelo + paredes.max.y) * 0.5f, centro.z),
                                      new Vector3(paredes.size.x, paredes.max.y - suelo + 1f, paredes.size.z));
-        interior.luces.Add(CrearLuzInterior($"Luz de {casa.name} (interior)",
+        interior.luces.Add(crearLuzInterior($"Luz de {casa.name} (interior)",
             new Vector3(centro.x, suelo + alturaLuzCasa, centro.z), intensidadCasa, alcanceCasa));
         interiores.Add(interior);
     }
 
-    void PrepararMolino(Transform molino)
+    private void prepararMolino(Transform molino)
     {
-        if (!LimitesDeHijos(molino, "Piso_Planta_Baja", out var piso)) return;
-        var interior = new Interior { nombre = molino.name };
-        var dentro = piso;
+        if (!limitesDeHijos(molino, "Piso_Planta_Baja", out Bounds piso))
+        {
+            return;
+        }
+
+        Interior interior = new Interior { nombre = molino.name };
+        Bounds dentro = piso;
         dentro.Expand(new Vector3(0.3f, 0f, 0.3f));
         dentro.max = new Vector3(dentro.max.x, dentro.max.y + 10f, dentro.max.z);
         interior.dentro = dentro;
         // Una luz en cada farol de pared (2 abajo, 1 arriba), un poco hacia el centro
         // para que el propio farol no le haga sombra.
-        foreach (var r in molino.GetComponentsInChildren<Renderer>())
+        foreach (Renderer r in molino.GetComponentsInChildren<Renderer>())
         {
-            if (!r.name.StartsWith("Farol_Pared")) continue;
-            var p = r.bounds.center;
-            var haciaCentro = Vector3.ProjectOnPlane(piso.center - p, Vector3.up);
+            if (!r.name.StartsWith("Farol_Pared"))
+            {
+                continue;
+            }
+
+            Vector3 p = r.bounds.center;
+            Vector3 haciaCentro = Vector3.ProjectOnPlane(piso.center - p, Vector3.up);
             p += haciaCentro.normalized * Mathf.Min(0.45f, haciaCentro.magnitude);
-            interior.luces.Add(CrearLuzInterior($"Luz de {r.name} (interior)", p, intensidadMolino, alcanceMolino));
+            interior.luces.Add(crearLuzInterior($"Luz de {r.name} (interior)", p, intensidadMolino, alcanceMolino));
         }
-        if (interior.luces.Count == 0) // por si no estan los faroles: una al centro de cada piso
-            interior.luces.Add(CrearLuzInterior("Luz del molino (interior)", piso.center + Vector3.up * 1.6f, intensidadMolino, alcanceMolino));
+
+        if (interior.luces.Count == 0)
+        {
+            interior.luces.Add(crearLuzInterior("Luz del molino (interior)", piso.center + Vector3.up * 1.6f, intensidadMolino, alcanceMolino));
+        }
+
         interiores.Add(interior);
     }
 
-    Light CrearLuzInterior(string nombre, Vector3 posicion, float intensidad, float alcance)
+    private Light crearLuzInterior(
+        string nombre,
+        Vector3 posicion,
+        float intensidad,
+        float alcance
+    )
     {
-        var go = new GameObject(nombre);
+        GameObject go = new GameObject(nombre);
         go.transform.SetParent(transform, false);
         go.transform.position = posicion;
-        var l = go.AddComponent<Light>();
+        Light l = go.AddComponent<Light>();
         l.type = LightType.Point;
         l.color = colorInterior;
         l.intensity = intensidad;
@@ -405,41 +523,67 @@ public class AldeaTerror : MonoBehaviour
         return l;
     }
 
-    void ActualizarInteriores(Vector3 jugador)
+    private void actualizarInteriores(Vector3 jugador)
     {
-        if (!interioresListos) PrepararInteriores();
+        if (!interioresListos)
+        {
+            prepararInteriores();
+        }
+
         bool adentro = false;
-        foreach (var i in interiores)
+        foreach (Interior i in interiores)
         {
             bool cerca = zona == Zona.Aldea && (i.dentro.ClosestPoint(jugador) - jugador).sqrMagnitude < distanciaEncendido * distanciaEncendido;
-            foreach (var l in i.luces) if (l != null) l.enabled = cerca;
-            if (zona == Zona.Aldea && i.dentro.Contains(jugador)) adentro = true;
+            foreach (Light l in i.luces)
+            {
+                if (l != null)
+                {
+                    l.enabled = cerca;
+                }
+            }
+
+            if (zona == Zona.Aldea && i.dentro.Contains(jugador))
+            {
+                adentro = true;
+            }
         }
 
         // Al entrar sube la luz ambiente poco a poco (y baja al salir).
         mezclaInterior = Mathf.MoveTowards(mezclaInterior, adentro ? 1f : 0f, Time.deltaTime * 2f);
         if (zona == Zona.Aldea && !Mathf.Approximately(mezclaInterior, mezclaAplicada))
         {
-            PonerAmbiente(Color.Lerp(ambiente, ambienteInterior, mezclaInterior));
+            ponerAmbiente(Color.Lerp(ambiente, ambienteInterior, mezclaInterior));
             mezclaAplicada = mezclaInterior;
         }
     }
 
-    static bool LimitesDeHijos(Transform t, string empiezaCon, out Bounds b)
+    private static bool limitesDeHijos(Transform t, string empiezaCon, out Bounds b)
     {
         b = default;
         bool hay = false;
-        foreach (var r in t.GetComponentsInChildren<Renderer>())
+        foreach (Renderer r in t.GetComponentsInChildren<Renderer>())
         {
-            if (!r.name.StartsWith(empiezaCon)) continue;
-            if (!hay) { b = r.bounds; hay = true; } else b.Encapsulate(r.bounds);
+            if (!r.name.StartsWith(empiezaCon))
+            {
+                continue;
+            }
+
+            if (!hay)
+            {
+                b = r.bounds;
+                hay = true;
+            }else
+            {
+                b.Encapsulate(r.bounds);
+            }
         }
+
         return hay;
     }
 
-    void CrearLuna()
+    private void crearLuna()
     {
-        var go = new GameObject("Luna (terror)");
+        GameObject go = new GameObject("Luna (terror)");
         go.transform.SetParent(transform, false);
         go.transform.rotation = Quaternion.Euler(direccionLuna);
         luna = go.AddComponent<Light>();

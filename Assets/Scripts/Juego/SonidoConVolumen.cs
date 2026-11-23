@@ -1,32 +1,36 @@
 using UnityEngine;
 
-/// <summary>
-/// Ponlo junto a cualquier AudioSource y elige su canal (Juego o Animacion).
-/// Su volumen se ajusta solo con los sliders de Opciones del menu principal.
-/// Ejemplo: musica de la Aldea -> canal Juego; sonido del elevador -> canal Animacion.
-/// </summary>
+// Ponlo junto a cualquier AudioSource y elige su canal (Juego o Animacion).
+// Su volumen se ajusta solo con los sliders de Opciones del menu principal.
+// Ejemplo: musica de la Aldea -> canal Juego; sonido del elevador -> canal Animacion.
 [RequireComponent(typeof(AudioSource))]
 public class SonidoConVolumen : MonoBehaviour
 {
     [Tooltip("Que slider de Opciones controla este sonido.")]
     public CanalSonido canal = CanalSonido.Juego;
 
-    AudioSource fuente;
-    float volumenOriginal;   // el volumen que le pusiste al AudioSource en el Inspector
+    private AudioSource fuente;
+    private float volumenOriginal;   // el volumen que le pusiste al AudioSource en el Inspector
 
-    void Awake()
+    private void Awake()
     {
         fuente = GetComponent<AudioSource>();
         volumenOriginal = fuente.volume;
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
-        ConfiguracionSonido.Cambio += Aplicar;
-        Aplicar();
+        ConfiguracionSonido.Cambio += aplicar;
+        aplicar();
     }
 
-    void OnDisable() => ConfiguracionSonido.Cambio -= Aplicar;
+    private void OnDisable()
+    {
+        ConfiguracionSonido.Cambio -= aplicar;
+    }
 
-    void Aplicar() => fuente.volume = volumenOriginal * ConfiguracionSonido.Volumen(canal);
+    private void aplicar()
+    {
+        fuente.volume = volumenOriginal * ConfiguracionSonido.obtenerVolumen(canal);
+    }
 }

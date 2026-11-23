@@ -12,19 +12,25 @@ public class CamaraSeguir : MonoBehaviour
     public float sensibilidad = 0.2f;
     public float suavizado = 10f;
 
-    float yaw;
-    float pitch = 15f;
+    private float yaw;
+    private float pitch = 15f;
 
-    void Start()
+    private void Start()
     {
-        if (objetivo != null) yaw = objetivo.eulerAngles.y;
+        if (objetivo != null)
+        {
+            yaw = objetivo.eulerAngles.y;
+        }
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
-        if (objetivo == null) return;
+        if (objetivo == null)
+        {
+            return;
+        }
 
-        var mouse = Mouse.current;
+        Mouse mouse = Mouse.current;
         if (mouse != null)
         {
             if (mouse.rightButton.isPressed)
@@ -33,9 +39,12 @@ public class CamaraSeguir : MonoBehaviour
                 yaw += delta.x * sensibilidad;
                 pitch = Mathf.Clamp(pitch - delta.y * sensibilidad, -10f, 70f);
             }
+
             float rueda = mouse.scroll.ReadValue().y;
             if (Mathf.Abs(rueda) > 0.01f)
+            {
                 distancia = Mathf.Clamp(distancia - Mathf.Sign(rueda) * 0.5f, distanciaMin, distanciaMax);
+            }
         }
 
         Vector3 foco = objetivo.position + Vector3.up * alturaMirada;

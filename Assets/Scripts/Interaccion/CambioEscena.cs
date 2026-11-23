@@ -1,12 +1,10 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// "(E) Entrar al subterraneo" / "(E) Subir a la Aldea": guarda lo que llevas (EstadoJuego),
-/// carga la otra escena y te pone en su PuntoLlegada.
-/// - Con "Trampilla": solo aparece cuando la trampilla ya esta abierta.
-/// - Con "Escalera": solo aparece cuando vas agarrado a esa escalera, hasta arriba.
-/// </summary>
+// "(E) Entrar al subterraneo" / "(E) Subir a la Aldea": guarda lo que llevas (EstadoJuego),
+// carga la otra escena y te pone en su PuntoLlegada.
+// - Con "Trampilla": solo aparece cuando la trampilla ya esta abierta.
+// - Con "Escalera": solo aparece cuando vas agarrado a esa escalera, hasta arriba.
 public class CambioEscena : Interactuable
 {
     [Tooltip("Lo que sale despues de (E).")]
@@ -27,7 +25,7 @@ public class CambioEscena : Interactuable
     public Escalera escalera;
     [Range(0.5f, 1f)] public float alturaMinima = 0.92f;
 
-    bool cargando;
+    private bool cargando;
 
     public override string TextoAccion => texto;
 
@@ -35,31 +33,55 @@ public class CambioEscena : Interactuable
     {
         get
         {
-            if (cargando) return false;
-            if (trampilla != null && !trampilla.Abierta) return false;
+            if (cargando)
+            {
+                return false;
+            }
+
+            if (trampilla != null && !trampilla.Abierta)
+            {
+                return false;
+            }
+
             if (escalera != null)
             {
-                var j = JugadorPrimeraPersona.Instancia;
-                if (j == null || j.EscaleraActual != escalera || j.AlturaEnEscalera < alturaMinima) return false;
+                JugadorPrimeraPersona j = JugadorPrimeraPersona.Instancia;
+                if (j == null || j.EscaleraActual != escalera || j.AlturaEnEscalera < alturaMinima)
+                {
+                    return false;
+                }
             }
+
             return true;
         }
     }
 
-    public override bool Interactuar(Transform jugador)
+    public override bool interactuar(Transform jugador)
     {
-        if (!Disponible) return false;
+        if (!Disponible)
+        {
+            return false;
+        }
+
         if (!string.IsNullOrEmpty(inventarioDesde) && !string.IsNullOrEmpty(inventarioHacia))
-            Inventarios.Cambiar(inventarioDesde, inventarioHacia);
+        {
+            Inventarios.cambiar(inventarioDesde, inventarioHacia);
+        }
+
         if (destinoEnEscena != null)
         {
-            var j = JugadorPrimeraPersona.Instancia;
-            if (j == null) return false;
-            j.Teletransportar(destinoEnEscena.position, Vector3.ProjectOnPlane(destinoEnEscena.forward, Vector3.up));
+            JugadorPrimeraPersona j = JugadorPrimeraPersona.Instancia;
+            if (j == null)
+            {
+                return false;
+            }
+
+            j.teletransportar(destinoEnEscena.position, Vector3.ProjectOnPlane(destinoEnEscena.forward, Vector3.up));
             return true;
         }
+
         cargando = true;
-        EstadoJuego.Guardar();
+        EstadoJuego.guardarEstado();
         EstadoJuego.Llegada = llegada;
         SceneManager.LoadScene(escenaDestino);
         return true;

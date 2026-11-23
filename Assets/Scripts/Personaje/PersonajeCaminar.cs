@@ -25,29 +25,43 @@ public class PersonajeCaminar : MonoBehaviour
     [Tooltip("Parametro float del Animator: 0 = quieto, 1 = caminar, 2 = correr.")]
     public string parametroVelocidad = "Velocidad";
 
-    CharacterController controller;
-    InputAction accionMover;
-    InputAction accionCorrer;
-    float velocidadActual;
-    float velocidadVertical;
-    int hashVelocidad;
-    bool animatorTieneParametro;
+    private CharacterController controller;
+    private InputAction accionMover;
+    private InputAction accionCorrer;
+    private float velocidadActual;
+    private float velocidadVertical;
+    private int hashVelocidad;
+    private bool animatorTieneParametro;
 
-    void Awake()
+    private void Awake()
     {
         controller = GetComponent<CharacterController>();
-        if (animator == null) animator = GetComponentInChildren<Animator>();
-        if (camara == null && Camera.main != null) camara = Camera.main.transform;
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        if (camara == null && Camera.main != null)
+        {
+            camara = Camera.main.transform;
+        }
 
         if (animator != null)
         {
             animator.applyRootMotion = false;
             hashVelocidad = Animator.StringToHash(parametroVelocidad);
-            foreach (var p in animator.parameters)
+            foreach (AnimatorControllerParameter p in animator.parameters)
+            {
                 if (p.nameHash == hashVelocidad && p.type == AnimatorControllerParameterType.Float)
+                {
                     animatorTieneParametro = true;
+                }
+            }
+
             if (!animatorTieneParametro)
+            {
                 Debug.LogWarning($"[PersonajeCaminar] El Animator no tiene un float \"{parametroVelocidad}\". El personaje se movera pero no animara.", this);
+            }
         }
 
         if (InputSystem.actions != null)
@@ -57,16 +71,16 @@ public class PersonajeCaminar : MonoBehaviour
         }
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         accionMover?.Enable();
         accionCorrer?.Enable();
     }
 
-    void Update()
+    private void Update()
     {
-        Vector2 entrada = LeerMovimiento();
-        bool corriendo = LeerCorrer();
+        Vector2 entrada = leerMovimiento();
+        bool corriendo = leerCorrer();
 
         Vector3 adelante = Vector3.forward, derecha = Vector3.right;
         if (camara != null)
@@ -74,9 +88,13 @@ public class PersonajeCaminar : MonoBehaviour
             adelante = Vector3.ProjectOnPlane(camara.forward, Vector3.up).normalized;
             derecha = Vector3.ProjectOnPlane(camara.right, Vector3.up).normalized;
         }
+
         Vector3 direccion = adelante * entrada.y + derecha * entrada.x;
         float intensidad = Mathf.Clamp01(direccion.magnitude);
-        if (intensidad > 0.01f) direccion /= direccion.magnitude;
+        if (intensidad > 0.01f)
+        {
+            direccion /= direccion.magnitude;
+        }
 
         float objetivo = intensidad * (corriendo ? velocidadCorrer : velocidadCaminar);
         velocidadActual = Mathf.MoveTowards(velocidadActual, objetivo, aceleracion * Time.deltaTime * velocidadCorrer);
@@ -87,7 +105,11 @@ public class PersonajeCaminar : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, rotacionObjetivo, velocidadGiro * Time.deltaTime);
         }
 
-        if (controller.isGrounded && velocidadVertical < 0f) velocidadVertical = -2f;
+        if (controller.isGrounded && velocidadVertical < 0f)
+        {
+            velocidadVertical = -2f;
+        }
+
         velocidadVertical += gravedad * Time.deltaTime;
 
         Vector3 movimiento = transform.forward * velocidadActual + Vector3.up * velocidadVertical;
@@ -102,23 +124,50 @@ public class PersonajeCaminar : MonoBehaviour
         }
     }
 
-    Vector2 LeerMovimiento()
+    private Vector2 leerMovimiento()
     {
-        if (accionMover != null) return Vector2.ClampMagnitude(accionMover.ReadValue<Vector2>(), 1f);
+        if (accionMover != null)
+        {
+            return Vector2.ClampMagnitude(accionMover.ReadValue<Vector2>(), 1f);
+        }
 
-        var k = Keyboard.current;
-        if (k == null) return Vector2.zero;
+        Keyboard k = Keyboard.current;
+        if (k == null)
+        {
+            return Vector2.zero;
+        }
+
         Vector2 v = Vector2.zero;
-        if (k.wKey.isPressed || k.upArrowKey.isPressed) v.y += 1;
-        if (k.sKey.isPressed || k.downArrowKey.isPressed) v.y -= 1;
-        if (k.dKey.isPressed || k.rightArrowKey.isPressed) v.x += 1;
-        if (k.aKey.isPressed || k.leftArrowKey.isPressed) v.x -= 1;
+        if (k.wKey.isPressed || k.upArrowKey.isPressed)
+        {
+            v.y += 1;
+        }
+
+        if (k.sKey.isPressed || k.downArrowKey.isPressed)
+        {
+            v.y -= 1;
+        }
+
+        if (k.dKey.isPressed || k.rightArrowKey.isPressed)
+        {
+            v.x += 1;
+        }
+
+        if (k.aKey.isPressed || k.leftArrowKey.isPressed)
+        {
+            v.x -= 1;
+        }
+
         return Vector2.ClampMagnitude(v, 1f);
     }
 
-    bool LeerCorrer()
+    private bool leerCorrer()
     {
-        if (accionCorrer != null) return accionCorrer.IsPressed();
+        if (accionCorrer != null)
+        {
+            return accionCorrer.IsPressed();
+        }
+
         return Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed;
     }
 }

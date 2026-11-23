@@ -1,44 +1,42 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Cuenta regresiva abajo a la derecha (la crea sola la Caceria):
-///  - Descanso: en blanco (1:00, 0:59...). Los ultimos 3 segundos: 3, 2, 1 grandes y con "latido".
-///  - En el 0: "¡EMPIEZA LA CACERÍA!" en rojo (y empieza la musica).
-///  - Cacería: en rojo, desde que los villanos empiezan a moverse. Se pausa mientras estas escondida.
-///  - Cacería infinita: "¡EMPIEZA LA CACERÍA INFINITA!" y luego "CACERÍA INFINITA" que crece, se encoge y vibra.
-/// </summary>
+// Cuenta regresiva abajo a la derecha (la crea sola la Caceria):
+// - Descanso: en blanco (1:00, 0:59...). Los ultimos 3 segundos: 3, 2, 1 grandes y con "latido".
+// - En el 0: "¡EMPIEZA LA CACERIA!" en rojo (y empieza la musica).
+// - Caceria: en rojo, desde que los villanos empiezan a moverse. Se pausa mientras estas escondida.
+// - Caceria infinita: "¡EMPIEZA LA CACERIA INFINITA!" y luego "CACERIA INFINITA" que crece, se encoge y vibra.
 public class RelojCaceria : MonoBehaviour
 {
-    static readonly Color Blanco = new Color(1f, 0.97f, 0.92f);
-    static readonly Color Rojo = new Color(0.95f, 0.12f, 0.1f);
-    const int TamanoNormal = 64;
-    const int TamanoGrande = 150;
+    private static readonly Color Blanco = new Color(1f, 0.97f, 0.92f);
+    private static readonly Color Rojo = new Color(0.95f, 0.12f, 0.1f);
+    private const int TAMANO_NORMAL = 64;
+    private const int TAMANO_GRANDE = 150;
 
-    Text texto;          // abajo a la derecha (reloj, 3-2-1)
-    Outline borde;
-    RectTransform rt;
-    Text textoCentro;    // ya no se usa: el aviso va abajo a la derecha como las cuentas
-    RectTransform rtCentro, rtLienzo;
-    float empiezaHasta = -1f;
-    int ultimoNumero = -1;
-    float popDesde;
-    Vector2 posBase;
+    private Text texto;          // abajo a la derecha (reloj, 3-2-1)
+    private Outline borde;
+    private RectTransform rt;
+    private Text textoCentro;    // ya no se usa: el aviso va abajo a la derecha como las cuentas
+    private RectTransform rtCentro, rtLienzo;
+    private float empiezaHasta = -1f;
+    private int ultimoNumero = -1;
+    private float popDesde;
+    private Vector2 posBase;
 
-    public static RelojCaceria Crear(Transform padre)
+    public static RelojCaceria crear(Transform padre)
     {
-        var lienzo = new GameObject("Reloj Caceria", typeof(Canvas), typeof(CanvasScaler));
+        GameObject lienzo = new GameObject("Reloj Caceria", typeof(Canvas), typeof(CanvasScaler));
         lienzo.transform.SetParent(padre, false);
-        var canvas = lienzo.GetComponent<Canvas>();
+        Canvas canvas = lienzo.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 900;
-        var esc = lienzo.GetComponent<CanvasScaler>();
+        CanvasScaler esc = lienzo.GetComponent<CanvasScaler>();
         esc.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         esc.referenceResolution = new Vector2(1920, 1080);
         esc.matchWidthOrHeight = 1f;
 
-        var t = NuevoTexto("Reloj", lienzo.transform, new Vector2(1f, 0f), TextAnchor.LowerRight, out var borde);
-        var r = t.rectTransform;
+        Text t = nuevoTexto("Reloj", lienzo.transform, new Vector2(1f, 0f), TextAnchor.LowerRight, out Outline borde);
+        RectTransform r = t.rectTransform;
         r.anchoredPosition = new Vector2(-40f, 36f);
         r.sizeDelta = new Vector2(400f, 190f);
         // Si no cabe (ventana angosta) se hace mas chico en vez de encimarse en la barra de objetos.
@@ -47,7 +45,7 @@ public class RelojCaceria : MonoBehaviour
         t.horizontalOverflow = HorizontalWrapMode.Wrap;
         t.verticalOverflow = VerticalWrapMode.Truncate;
 
-        var tc = NuevoTexto("Aviso centro", lienzo.transform, new Vector2(0.5f, 0.5f), TextAnchor.MiddleCenter, out _);
+        Text tc = nuevoTexto("Aviso centro", lienzo.transform, new Vector2(0.5f, 0.5f), TextAnchor.MiddleCenter, out _);
         tc.rectTransform.anchoredPosition = new Vector2(0f, 170f);
         tc.rectTransform.sizeDelta = new Vector2(1500f, 220f);
         tc.resizeTextForBestFit = true;
@@ -56,7 +54,7 @@ public class RelojCaceria : MonoBehaviour
         tc.horizontalOverflow = HorizontalWrapMode.Wrap;
         tc.verticalOverflow = VerticalWrapMode.Truncate;
 
-        var reloj = lienzo.AddComponent<RelojCaceria>();
+        RelojCaceria reloj = lienzo.AddComponent<RelojCaceria>();
         reloj.texto = t;
         reloj.borde = borde;
         reloj.rt = r;
@@ -69,14 +67,20 @@ public class RelojCaceria : MonoBehaviour
         return reloj;
     }
 
-    static Text NuevoTexto(string nombre, Transform padre, Vector2 ancla, TextAnchor alineacion, out Outline borde)
+    private static Text nuevoTexto(
+        string nombre,
+        Transform padre,
+        Vector2 ancla,
+        TextAnchor alineacion,
+        out Outline borde
+    )
     {
-        var go = new GameObject(nombre, typeof(RectTransform), typeof(Text));
+        GameObject go = new GameObject(nombre, typeof(RectTransform), typeof(Text));
         go.transform.SetParent(padre, false);
-        var r = (RectTransform)go.transform;
+        RectTransform r = (RectTransform)go.transform;
         r.anchorMin = r.anchorMax = r.pivot = ancla;
-        var t = go.GetComponent<Text>();
-        var barra = BarraHerramientas.Instancia;
+        Text t = go.GetComponent<Text>();
+        BarraHerramientas barra = BarraHerramientas.Instancia;
         t.font = barra != null && barra.fuente != null ? barra.fuente : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         t.alignment = alineacion;
         t.raycastTarget = false;
@@ -84,43 +88,44 @@ public class RelojCaceria : MonoBehaviour
         borde = go.AddComponent<Outline>();
         borde.effectColor = new Color(0f, 0f, 0f, 0.85f);
         borde.effectDistance = new Vector2(3f, -3f);
-        var sombra = go.AddComponent<Shadow>();
+        Shadow sombra = go.AddComponent<Shadow>();
         sombra.effectColor = new Color(0f, 0f, 0f, 0.5f);
         sombra.effectDistance = new Vector2(0f, -6f);
         return t;
     }
 
-    /// <summary>Ancho libre a la derecha de la barra de objetos (en pixeles del lienzo).</summary>
-    float AnchoLibre()
+    // Ancho libre a la derecha de la barra de objetos (en pixeles del lienzo).
+    private float anchoLibre()
     {
         float anchoPantalla = rtLienzo.rect.width;
-        var b = BarraHerramientas.Instancia;
+        BarraHerramientas b = BarraHerramientas.Instancia;
         float anchoBarra = b != null
             ? b.numeroCasillas * b.tamanoCasilla + (b.numeroCasillas - 1) * b.separacion + 2f * b.relleno
             : 620f;
         return Mathf.Clamp((anchoPantalla - anchoBarra) * 0.5f - 40f - 30f, 120f, 420f);
     }
 
-    /// <summary>Muestra "¡EMPIEZA LA CACERÍA!" unos segundos.</summary>
-    public void MostrarEmpieza(float segundos)
+    // Muestra "¡EMPIEZA LA CACERIA!" unos segundos.
+    public void mostrarEmpieza(float segundos)
     {
         empiezaHasta = Time.time + segundos;
         popDesde = Time.time;
     }
 
-    void Update()
+    private void Update()
     {
-        var c = Caceria.Instancia;
+        Caceria c = Caceria.Instancia;
         float escala = 1f;
         // En el laberinto no se ven los tiempos (ahi la caceria y el descanso estan en pausa).
-        var j = JugadorPrimeraPersona.Instancia;
-        if (j != null && LaberintoAutomatico.Contiene(j.transform.position))
+        JugadorPrimeraPersona j = JugadorPrimeraPersona.Instancia;
+        if (j != null && LaberintoAutomatico.contiene(j.transform.position))
         {
             texto.enabled = false;
             textoCentro.enabled = false;
             return;
         }
-        rt.sizeDelta = new Vector2(AnchoLibre(), rt.sizeDelta.y);
+
+        rt.sizeDelta = new Vector2(anchoLibre(), rt.sizeDelta.y);
         rt.anchoredPosition = posBase;
 
         textoCentro.enabled = false;
@@ -128,23 +133,23 @@ public class RelojCaceria : MonoBehaviour
         if (Caceria.Infinita)
         {
             bool inicio = Time.time < empiezaHasta;
-            Mostrar(inicio ? "¡EMPIEZA LA\nCACERÍA INFINITA!" : "CACERÍA\nINFINITA", Rojo, 80);
+            mostrar(inicio ? "¡EMPIEZA LA\nCACERÍA INFINITA!" : "CACERÍA\nINFINITA", Rojo, 80);
             // Late (crece y se encoge) y vibra un poquito, sin pasarse encima de la barra.
             float latido = 1f + 0.07f * Mathf.Sin(Time.unscaledTime * 6.5f);
-            escala = (inicio ? Mathf.Lerp(1f, Pop(0.35f), 0.3f) : 1f) * latido;
+            escala = (inicio ? Mathf.Lerp(1f, pop(0.35f), 0.3f) : 1f) * latido;
             rt.anchoredPosition = posBase + Random.insideUnitCircle * 2.5f;
             rt.localScale = Vector3.one * escala;
             return;
         }
 
-        // "¡EMPIEZA LA CACERÍA!" en el mismo lugar que las cuentas (abajo a la derecha), en dos renglones
+        // "¡EMPIEZA LA CACERIA!" en el mismo lugar que las cuentas (abajo a la derecha), en dos renglones
         // para que quepa junto a la barra de objetos sin encimarse.
         if (Time.time < empiezaHasta)
         {
-            Mostrar("¡EMPIEZA\nLA CACERÍA!", Rojo, 80);
+            mostrar("¡EMPIEZA\nLA CACERÍA!", Rojo, 80);
             float falta = empiezaHasta - Time.time;
             texto.color = new Color(Rojo.r, Rojo.g, Rojo.b, Mathf.Clamp01(falta / 0.5f)); // se desvanece al final
-            escala = Mathf.Lerp(1f, Pop(0.35f), 0.3f) * (1f + 0.03f * Mathf.Sin(Time.time * 10f)); // crece poquito: no toca la barra
+            escala = Mathf.Lerp(1f, pop(0.35f), 0.3f) * (1f + 0.03f * Mathf.Sin(Time.time * 10f)); // crece poquito: no toca la barra
         }
         else if (Caceria.FaseActual == Caceria.Fase.Descanso)
         {
@@ -152,8 +157,13 @@ public class RelojCaceria : MonoBehaviour
             if (s <= 3 && s >= 1)
             {
                 // 3, 2, 1: grandes, cada uno "cae" y se va desvaneciendo.
-                if (s != ultimoNumero) { ultimoNumero = s; popDesde = Time.time; }
-                Mostrar(s.ToString(), Blanco, TamanoGrande);
+                if (s != ultimoNumero)
+                {
+                    ultimoNumero = s;
+                    popDesde = Time.time;
+                }
+
+                mostrar(s.ToString(), Blanco, TAMANO_GRANDE);
                 float k = Mathf.Clamp01(Time.time - popDesde);
                 escala = Mathf.Lerp(1.6f, 1f, 1f - Mathf.Pow(1f - Mathf.Clamp01(k / 0.25f), 3f));
                 texto.color = new Color(Blanco.r, Blanco.g, Blanco.b, Mathf.Lerp(1f, 0.35f, k));
@@ -161,27 +171,33 @@ public class RelojCaceria : MonoBehaviour
             else
             {
                 ultimoNumero = -1;
-                Mostrar(Formato(Caceria.Restante), Blanco, TamanoNormal);
+                mostrar(formato(Caceria.Restante), Blanco, TAMANO_NORMAL);
             }
         }
         else if (Caceria.FaseActual == Caceria.Fase.Caceria && c != null && c.Liberados)
         {
-            Mostrar(Formato(Caceria.Restante), Rojo, TamanoNormal);
+            mostrar(formato(Caceria.Restante), Rojo, TAMANO_NORMAL);
             // Ultimos 10 segundos: late un poquito.
-            if (Caceria.Restante <= 10f) escala = 1f + 0.06f * Mathf.Abs(Mathf.Sin(Time.time * 6f));
+            if (Caceria.Restante <= 10f)
+            {
+                escala = 1f + 0.06f * Mathf.Abs(Mathf.Sin(Time.time * 6f));
+            }
         }
-        else texto.enabled = false;
+        else
+        {
+            texto.enabled = false;
+        }
 
         rt.localScale = Vector3.one * escala;
     }
 
-    float Pop(float duracion)
+    private float pop(float duracion)
     {
         float k = Mathf.Clamp01((Time.time - popDesde) / duracion);
         return Mathf.Lerp(1.5f, 1f, 1f - Mathf.Pow(1f - k, 3f));
     }
 
-    void Mostrar(string s, Color color, int tamano)
+    private void mostrar(string s, Color color, int tamano)
     {
         texto.enabled = true;
         texto.text = s;
@@ -190,7 +206,7 @@ public class RelojCaceria : MonoBehaviour
         texto.resizeTextMaxSize = tamano; // con "best fit" este es el tamano real (si cabe)
     }
 
-    static string Formato(float segundos)
+    private static string formato(float segundos)
     {
         int s = Mathf.Max(0, Mathf.CeilToInt(segundos));
         return $"{s / 60}:{s % 60:00}";

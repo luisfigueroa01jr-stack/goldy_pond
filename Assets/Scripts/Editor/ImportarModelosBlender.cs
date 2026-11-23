@@ -9,27 +9,25 @@ using UnityEngine.SceneManagement;
 
 namespace GoldyPond.EditorTools
 {
-    /// <summary>
-    /// Integra los modelos exportados desde Blender (Assets/Models/**.fbx):
-    ///  - Ajustes de importacion la primera vez que entra cada FBX.
-    ///  - Materiales URP compartidos en Assets/Materials/Paleta con los colores
-    ///    exactos de Blender (Blender/paleta_materiales.json).
-    ///  - Prefabs (variantes del modelo) en Assets/Prefabs con collider.
-    ///  - Escenas Aldea y Subterraneo si todavia no existen.
-    /// Todo es idempotente: lo que ya existe no se sobrescribe, asi que los
-    /// ajustes hechos a mano en materiales, prefabs o escenas se respetan.
-    /// </summary>
+    // Integra los modelos exportados desde Blender (Assets/Models/**.fbx):
+    // - Ajustes de importacion la primera vez que entra cada FBX.
+    // - Materiales URP compartidos en Assets/Materials/Paleta con los colores
+    // exactos de Blender (Blender/paleta_materiales.json).
+    // - Prefabs (variantes del modelo) en Assets/Prefabs con collider.
+    // - Escenas Aldea y Subterraneo si todavia no existen.
+    // Todo es idempotente: lo que ya existe no se sobrescribe, asi que los
+    // ajustes hechos a mano en materiales, prefabs o escenas se respetan.
     [InitializeOnLoad]
     public class ImportarModelosBlender : AssetPostprocessor
     {
-        const string CarpetaModelos = "Assets/Models/";
-        const string CarpetaPaleta = "Assets/Materials/Paleta";
-        const string CarpetaPrefabs = "Assets/Prefabs";
-        const string CarpetaEscenas = "Assets/Scenes";
-        const string RutaPaleta = "Blender/paleta_materiales.json";
+        private const string CARPETA_MODELOS = "Assets/Models/";
+        private const string CARPETA_PALETA = "Assets/Materials/Paleta";
+        private const string CARPETA_PREFABS = "Assets/Prefabs";
+        private const string CARPETA_ESCENAS = "Assets/Scenes";
+        private const string RUTA_PALETA = "Blender/paleta_materiales.json";
 
         // Escenarios completos: llevan colliders de malla y se marcan como estaticos.
-        static readonly Dictionary<string, string> Escenarios = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> Escenarios = new Dictionary<string, string>
         {
             { "Goldy_Pond_Colores", "Aldea" },
             { "Subterraneo_Colores", "Subterraneo" },
@@ -38,13 +36,13 @@ namespace GoldyPond.EditorTools
 
         // Objetos grandes por los que se camina (no llevan la caja que envuelve todo):
         // collider de malla en cada pieza, menos las que se nombran aqui (se atraviesan).
-        static readonly Dictionary<string, string[]> ConColliderDeMalla = new Dictionary<string, string[]>
+        private static readonly Dictionary<string, string[]> ConColliderDeMalla = new Dictionary<string, string[]>
         {
             { "Portal_Nocturno", new[] { "energia" } },
         };
 
         // Materiales que en las referencias son luz (ventanas, faroles, vidrio de la linterna).
-        static readonly Dictionary<string, Color> Emisivos = new Dictionary<string, Color>
+        private static readonly Dictionary<string, Color> Emisivos = new Dictionary<string, Color>
         {
             { "Amarillo", new Color(1f, 0.78f, 0.45f) * 1.5f },
             { "Amarillo claro", new Color(1f, 0.827f, 0.478f) * 2f }, // #FFD37A, "Luz (emision)" de la linterna
@@ -55,27 +53,32 @@ namespace GoldyPond.EditorTools
         };
 
         // Agua del lago del subterraneo: translucida.
-        static readonly Dictionary<string, float> Translucidos = new Dictionary<string, float>
+        private static readonly Dictionary<string, float> Translucidos = new Dictionary<string, float>
         {
             { "Azul", 0.75f },
         };
 
-        static bool pendiente;
+        private static bool pendiente;
 
         static ImportarModelosBlender()
         {
-            Programar();
+            programar();
         }
 
-        // ---------- Importacion ----------
+        // ------------------- IMPORTACION ------------------------------
 
-        void OnPreprocessModel()
+        private void onPreprocessModel()
         {
-            if (!assetPath.StartsWith(CarpetaModelos) || !(assetImporter is ModelImporter mi))
+            if (!assetPath.StartsWith(CARPETA_MODELOS) || !(assetImporter is ModelImporter mi))
+            {
                 return;
+            }
+
             // Solo en la primera importacion, para no pisar ajustes hechos despues en el Inspector.
             if (!mi.importSettingsMissing)
+            {
                 return;
+            }
 
             mi.globalScale = 1f;
             mi.useFileScale = true;
@@ -92,74 +95,100 @@ namespace GoldyPond.EditorTools
             mi.addCollider = Escenarios.ContainsKey(Path.GetFileNameWithoutExtension(assetPath));
         }
 
-        static void OnPostprocessAllAssets(string[] importados, string[] borrados, string[] movidos, string[] origenMovidos)
+        private static void onPostprocessAllAssets(
+            string[] importados,
+            string[] borrados,
+            string[] movidos,
+            string[] origenMovidos
+        )
         {
-            if (importados.Any(EsModelo) || importados.Any(p => p.EndsWith(".cs")))
-                Programar();
+            if (importados.Any(esModelo) || importados.Any(p => p.EndsWith(".cs")))
+            {
+                programar();
+            }
         }
 
-        static bool EsModelo(string ruta) =>
-            ruta.StartsWith(CarpetaModelos) && ruta.EndsWith(".fbx", System.StringComparison.OrdinalIgnoreCase);
+        private static bool esModelo(string ruta)
+        {
+            return ruta.StartsWith(CARPETA_MODELOS) && ruta.EndsWith(".fbx", System.StringComparison.OrdinalIgnoreCase);
+        }
 
-        static void Programar()
+        private static void programar()
         {
             if (pendiente || Application.isBatchMode)
+            {
                 return;
+            }
+
             pendiente = true;
             EditorApplication.delayCall += () =>
             {
                 pendiente = false;
                 if (EditorApplication.isCompiling || EditorApplication.isUpdating || EditorApplication.isPlayingOrWillChangePlaymode)
                 {
-                    Programar();
+                    programar();
                     return;
                 }
-                ProcesarTodo(crearEscenas: true);
+
+                procesarTodo(crearEscenas: true);
             };
         }
 
-        // ---------- Entradas manuales ----------
+        // ------------------- ENTRADAS MANUALES ------------------------------
 
         [MenuItem("Goldy Pond/Modelos de Blender/Actualizar materiales, prefabs y escenas")]
-        static void MenuActualizar() => ProcesarTodo(crearEscenas: true);
-
-        /// <summary>Para Unity en modo batch: -executeMethod GoldyPond.EditorTools.ImportarModelosBlender.ProcesarBatch</summary>
-        public static void ProcesarBatch()
+        private static void menuActualizar()
         {
-            ProcesarTodo(crearEscenas: true);
+            procesarTodo(crearEscenas: true);
+        }
+
+        // Para Unity en modo batch: -executeMethod GoldyPond.EditorTools.ImportarModelosBlender.procesarBatch
+        public static void procesarBatch()
+        {
+            procesarTodo(crearEscenas: true);
             AssetDatabase.SaveAssets();
         }
 
-        // ---------- Proceso principal ----------
+        // ------------------- PROCESO PRINCIPAL ------------------------------
 
-        static void ProcesarTodo(bool crearEscenas)
+        private static void procesarTodo(bool crearEscenas)
         {
-            var modelos = AssetDatabase.FindAssets("t:Model", new[] { CarpetaModelos.TrimEnd('/') })
+            List<string> modelos = AssetDatabase.FindAssets("t:Model", new[] { CARPETA_MODELOS.TrimEnd('/') })
                 .Select(AssetDatabase.GUIDToAssetPath)
-                .Where(EsModelo)
+                .Where(esModelo)
                 .OrderBy(p => p)
                 .ToList();
             if (modelos.Count == 0)
+            {
                 return;
+            }
 
-            var paleta = CargarPaleta();
-            foreach (var ruta in modelos)
-                RemapearMateriales(ruta, paleta);
+            Dictionary<string, MaterialBlender> paleta = cargarPaleta();
+            foreach (string ruta in modelos)
+            {
+                remapearMateriales(ruta, paleta);
+            }
 
-            foreach (var ruta in modelos)
-                CrearPrefab(ruta);
+            foreach (string ruta in modelos)
+            {
+                crearPrefab(ruta);
+            }
 
             if (crearEscenas)
-                foreach (var par in Escenarios)
-                    CrearEscena(par.Key, par.Value);
+            {
+                foreach (KeyValuePair<string, string> par in Escenarios)
+                {
+                    crearEscena(par.Key, par.Value);
+                }
+            }
 
             AssetDatabase.SaveAssets();
         }
 
-        // ---------- Materiales ----------
+        // ------------------- MATERIALES ------------------------------
 
         [System.Serializable]
-        class MaterialBlender
+        private class MaterialBlender
         {
             public string nombre;
             public float[] color_lineal;
@@ -168,62 +197,77 @@ namespace GoldyPond.EditorTools
         }
 
         [System.Serializable]
-        class PaletaBlender
+        private class PaletaBlender
         {
             public List<MaterialBlender> materiales = new List<MaterialBlender>();
         }
 
-        static Dictionary<string, MaterialBlender> CargarPaleta()
+        private static Dictionary<string, MaterialBlender> cargarPaleta()
         {
-            var ruta = Path.Combine(Directory.GetParent(Application.dataPath).FullName, RutaPaleta);
+            string ruta = Path.Combine(Directory.GetParent(Application.dataPath).FullName, RUTA_PALETA);
             if (!File.Exists(ruta))
             {
-                Debug.LogWarning($"[Goldy Pond] No se encontro {RutaPaleta}; se usaran los colores que trae el FBX.");
+                Debug.LogWarning($"[Goldy Pond] No se encontro {RUTA_PALETA}; se usaran los colores que trae el FBX.");
                 return new Dictionary<string, MaterialBlender>();
             }
-            var paleta = JsonUtility.FromJson<PaletaBlender>(File.ReadAllText(ruta));
+
+            PaletaBlender paleta = JsonUtility.FromJson<PaletaBlender>(File.ReadAllText(ruta));
             return paleta.materiales.Where(m => !string.IsNullOrEmpty(m.nombre)).GroupBy(m => m.nombre)
                 .ToDictionary(g => g.Key, g => g.First());
         }
 
-        /// <summary>Asigna a cada material del FBX su material compartido de la paleta. Devuelve true si hubo que reimportar.</summary>
-        static bool RemapearMateriales(string rutaModelo, Dictionary<string, MaterialBlender> paleta)
+        // Asigna a cada material del FBX su material compartido de la paleta. Devuelve true si hubo que reimportar.
+        private static bool remapearMateriales(
+            string rutaModelo,
+            Dictionary<string, MaterialBlender> paleta
+        )
         {
             if (!(AssetImporter.GetAtPath(rutaModelo) is ModelImporter importer))
+            {
                 return false;
+            }
 
-            var yaMapeados = new HashSet<string>(importer.GetExternalObjectMap()
+            HashSet<string> yaMapeados = new HashSet<string>(importer.GetExternalObjectMap()
                 .Where(kv => kv.Key.type == typeof(Material) && kv.Value != null)
                 .Select(kv => kv.Key.name));
-            var embebidos = AssetDatabase.LoadAllAssetsAtPath(rutaModelo).OfType<Material>()
+            List<Material> embebidos = AssetDatabase.LoadAllAssetsAtPath(rutaModelo).OfType<Material>()
                 .Where(m => !yaMapeados.Contains(m.name))
                 .ToList();
             if (embebidos.Count == 0)
-                return false;
-
-            foreach (var embebido in embebidos)
             {
-                var compartido = ObtenerMaterial(embebido.name, embebido, paleta);
+                return false;
+            }
+
+            foreach (Material embebido in embebidos)
+            {
+                Material compartido = obtenerMaterial(embebido.name, embebido, paleta);
                 importer.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), embebido.name), compartido);
             }
+
             importer.SaveAndReimport();
             return true;
         }
 
-        static Material ObtenerMaterial(string nombre, Material respaldo, Dictionary<string, MaterialBlender> paleta)
+        private static Material obtenerMaterial(
+            string nombre,
+            Material respaldo,
+            Dictionary<string, MaterialBlender> paleta
+        )
         {
-            CrearCarpeta(CarpetaPaleta);
-            var ruta = $"{CarpetaPaleta}/{NombreArchivo(nombre)}.mat";
-            var existente = AssetDatabase.LoadAssetAtPath<Material>(ruta);
+            crearCarpeta(CARPETA_PALETA);
+            string ruta = $"{CARPETA_PALETA}/{nombreArchivo(nombre)}.mat";
+            Material existente = AssetDatabase.LoadAssetAtPath<Material>(ruta);
             if (existente != null)
+            {
                 return existente;
+            }
 
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? respaldo.shader;
-            var mat = new Material(shader) { name = nombre };
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? respaldo.shader;
+            Material mat = new Material(shader) { name = nombre };
 
             Color color;
             float suavidad = 0.5f, metal = 0f;
-            if (paleta.TryGetValue(nombre, out var mb) && mb.color_lineal != null && mb.color_lineal.Length >= 3)
+            if (paleta.TryGetValue(nombre, out MaterialBlender mb) && mb.color_lineal != null && mb.color_lineal.Length >= 3)
             {
                 // Blender guarda el color en espacio lineal; los colores de material en Unity van en sRGB.
                 color = new Color(mb.color_lineal[0], mb.color_lineal[1], mb.color_lineal[2], 1f).gamma;
@@ -240,14 +284,14 @@ namespace GoldyPond.EditorTools
             mat.SetFloat("_Smoothness", suavidad);
             mat.SetFloat("_Metallic", metal);
 
-            if (Emisivos.TryGetValue(nombre, out var emision))
+            if (Emisivos.TryGetValue(nombre, out Color emision))
             {
                 mat.EnableKeyword("_EMISSION");
                 mat.SetColor("_EmissionColor", emision);
                 mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
             }
 
-            if (Translucidos.TryGetValue(nombre, out var alfa))
+            if (Translucidos.TryGetValue(nombre, out float alfa))
             {
                 color.a = alfa;
                 mat.SetColor("_BaseColor", color);
@@ -268,56 +312,67 @@ namespace GoldyPond.EditorTools
             return mat;
         }
 
-        // ---------- Prefabs ----------
+        // ------------------- PREFABS ------------------------------
 
-        static void CrearPrefab(string rutaModelo)
+        private static void crearPrefab(string rutaModelo)
         {
-            var nombre = Path.GetFileNameWithoutExtension(rutaModelo);
-            var sub = Path.GetDirectoryName(rutaModelo).Replace('\\', '/').Substring(CarpetaModelos.Length).TrimStart('/');
-            var carpeta = string.IsNullOrEmpty(sub) ? CarpetaPrefabs : $"{CarpetaPrefabs}/{sub}";
-            var ruta = $"{carpeta}/{nombre}.prefab";
+            string nombre = Path.GetFileNameWithoutExtension(rutaModelo);
+            string sub = Path.GetDirectoryName(rutaModelo).Replace('\\', '/').Substring(CARPETA_MODELOS.Length).TrimStart('/');
+            string carpeta = string.IsNullOrEmpty(sub) ? CARPETA_PREFABS : $"{CARPETA_PREFABS}/{sub}";
+            string ruta = $"{carpeta}/{nombre}.prefab";
             if (AssetDatabase.LoadAssetAtPath<GameObject>(ruta) != null)
+            {
                 return;
+            }
 
-            var modelo = AssetDatabase.LoadAssetAtPath<GameObject>(rutaModelo);
+            GameObject modelo = AssetDatabase.LoadAssetAtPath<GameObject>(rutaModelo);
             if (modelo == null)
+            {
                 return;
-            CrearCarpeta(carpeta);
+            }
 
-            var escena = EditorSceneManager.NewPreviewScene();
+            crearCarpeta(carpeta);
+
+            Scene escena = EditorSceneManager.NewPreviewScene();
             try
             {
-                var raiz = (GameObject)PrefabUtility.InstantiatePrefab(modelo, escena);
+                GameObject raiz = (GameObject)PrefabUtility.InstantiatePrefab(modelo, escena);
                 raiz.name = nombre;
 
                 if (Escenarios.ContainsKey(nombre))
                 {
-                    const StaticEditorFlags estatico = StaticEditorFlags.BatchingStatic
+                    const StaticEditorFlags ESTATICO = StaticEditorFlags.BatchingStatic
                         | StaticEditorFlags.OccluderStatic | StaticEditorFlags.OccludeeStatic
                         | StaticEditorFlags.ReflectionProbeStatic;
-                    foreach (var t in raiz.GetComponentsInChildren<Transform>(true))
-                        GameObjectUtility.SetStaticEditorFlags(t.gameObject, estatico);
+                    foreach (Transform t in raiz.GetComponentsInChildren<Transform>(true))
+                    {
+                        GameObjectUtility.SetStaticEditorFlags(t.gameObject, ESTATICO);
+                    }
                 }
-                else if (ConColliderDeMalla.TryGetValue(nombre, out var sinCollider))
+                else if (ConColliderDeMalla.TryGetValue(nombre, out string[] sinCollider))
                 {
-                    foreach (var mf in raiz.GetComponentsInChildren<MeshFilter>(true))
+                    foreach (MeshFilter mf in raiz.GetComponentsInChildren<MeshFilter>(true))
+                    {
                         if (!sinCollider.Contains(mf.name))
+                        {
                             mf.gameObject.AddComponent<MeshCollider>().sharedMesh = mf.sharedMesh;
+                        }
+                    }
                 }
                 else
                 {
                     // Objeto interactivo: un BoxCollider que envuelve todo el modelo para poder detectarlo/recogerlo.
-                    var limites = LimitesLocales(raiz);
-                    var caja = raiz.AddComponent<BoxCollider>();
+                    Bounds limites = limitesLocales(raiz);
+                    BoxCollider caja = raiz.AddComponent<BoxCollider>();
                     caja.center = limites.center;
                     caja.size = limites.size;
 
                     if (nombre == "Linterna")
                     {
-                        var luz = new GameObject("Luz");
+                        GameObject luz = new GameObject("Luz");
                         luz.transform.SetParent(raiz.transform, false);
                         luz.transform.localPosition = limites.center;
-                        var l = luz.AddComponent<Light>();
+                        Light l = luz.AddComponent<Light>();
                         l.type = LightType.Point;
                         l.color = new Color(1f, 0.827f, 0.478f); // #FFD37A
                         l.range = 8f;
@@ -334,30 +389,39 @@ namespace GoldyPond.EditorTools
             }
         }
 
-        static Bounds LimitesLocales(GameObject raiz)
+        private static Bounds limitesLocales(GameObject raiz)
         {
-            var renders = raiz.GetComponentsInChildren<Renderer>();
+            Renderer[] renders = raiz.GetComponentsInChildren<Renderer>();
             if (renders.Length == 0)
+            {
                 return new Bounds(Vector3.zero, Vector3.one * 0.1f);
-            var b = renders[0].bounds;
-            foreach (var r in renders)
+            }
+
+            Bounds b = renders[0].bounds;
+            foreach (Renderer r in renders)
+            {
                 b.Encapsulate(r.bounds);
+            }
+
             // La raiz esta en el origen sin rotacion ni escala: limites del mundo = locales.
             return b;
         }
 
-        // ---------- Escenas ----------
+        // ------------------- ESCENAS ------------------------------
 
-        static void CrearEscena(string nombreModelo, string nombreEscena)
+        private static void crearEscena(string nombreModelo, string nombreEscena)
         {
-            var rutaEscena = $"{CarpetaEscenas}/{nombreEscena}.unity";
-            var rutaPrefab = AssetDatabase.FindAssets($"t:Prefab {nombreModelo}", new[] { CarpetaPrefabs })
+            string rutaEscena = $"{CARPETA_ESCENAS}/{nombreEscena}.unity";
+            string rutaPrefab = AssetDatabase.FindAssets($"t:Prefab {nombreModelo}", new[] { CARPETA_PREFABS })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .FirstOrDefault(p => Path.GetFileNameWithoutExtension(p) == nombreModelo);
             if (File.Exists(rutaEscena) || rutaPrefab == null)
+            {
                 return;
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(rutaPrefab);
-            CrearCarpeta(CarpetaEscenas);
+            }
+
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(rutaPrefab);
+            crearCarpeta(CARPETA_ESCENAS);
 
             // Escena aditiva para no cerrar ni ensuciar la que tenga abierta el usuario.
             // Unity no lo permite si hay una escena sin titulo abierta: en batch no hay nada que perder,
@@ -370,18 +434,22 @@ namespace GoldyPond.EditorTools
                                  "Guardala o abre otra y usa Goldy Pond > Modelos de Blender > Actualizar materiales, prefabs y escenas.");
                 return;
             }
-            var modo = haySinTitulo ? NewSceneMode.Single : NewSceneMode.Additive;
-            var escena = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, modo);
+
+            NewSceneMode modo = haySinTitulo ? NewSceneMode.Single : NewSceneMode.Additive;
+            Scene escena = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, modo);
             try
             {
-                var inst = (GameObject)PrefabUtility.InstantiatePrefab(prefab, escena);
-                var b = LimitesLocales(inst);
+                GameObject inst = (GameObject)PrefabUtility.InstantiatePrefab(prefab, escena);
+                Bounds b = limitesLocales(inst);
 
-                foreach (var go in escena.GetRootGameObjects())
+                foreach (GameObject go in escena.GetRootGameObjects())
                 {
-                    var cam = go.GetComponent<Camera>();
+                    Camera cam = go.GetComponent<Camera>();
                     if (cam == null)
+                    {
                         continue;
+                    }
+
                     // Vista general elevada, como en las imagenes de referencia.
                     float dist = Mathf.Max(b.extents.x, b.extents.z);
                     cam.transform.position = b.center + new Vector3(0f, dist * 0.9f, -dist * 1.4f);
@@ -399,17 +467,20 @@ namespace GoldyPond.EditorTools
                 if (nombreModelo == "Subterraneo_Colores")
                 {
                     // Cueva: luz principal tenue y morada, como el ambiente de la referencia.
-                    foreach (var luz in escena.GetRootGameObjects().SelectMany(g => g.GetComponents<Light>()))
+                    foreach (Light luz in escena.GetRootGameObjects().SelectMany(g => g.GetComponents<Light>()))
                     {
                         if (luz.type != LightType.Directional)
+                        {
                             continue;
+                        }
+
                         luz.color = new Color(0.75f, 0.62f, 0.95f);
                         luz.intensity = 0.6f;
                     }
                 }
 
                 // Jugador en primera persona; la camara panoramica queda desactivada.
-                CrearJugadorPrimeraPersona.Configurar(escena, nombreEscena);
+                CrearJugadorPrimeraPersona.configurar(escena, nombreEscena);
 
                 EditorSceneManager.SaveScene(escena, rutaEscena);
                 Debug.Log($"[Goldy Pond] Escena creada: {rutaEscena}");
@@ -417,25 +488,33 @@ namespace GoldyPond.EditorTools
             finally
             {
                 if (modo == NewSceneMode.Additive)
+                {
                     EditorSceneManager.CloseScene(escena, true);
+                }
             }
         }
 
-        // ---------- Utilidades ----------
+        // ------------------- UTILIDADES ------------------------------
 
-        static void CrearCarpeta(string ruta)
+        private static void crearCarpeta(string ruta)
         {
             if (AssetDatabase.IsValidFolder(ruta))
+            {
                 return;
-            var padre = Path.GetDirectoryName(ruta).Replace('\\', '/');
-            CrearCarpeta(padre);
+            }
+
+            string padre = Path.GetDirectoryName(ruta).Replace('\\', '/');
+            crearCarpeta(padre);
             AssetDatabase.CreateFolder(padre, Path.GetFileName(ruta));
         }
 
-        static string NombreArchivo(string nombre)
+        private static string nombreArchivo(string nombre)
         {
-            foreach (var c in Path.GetInvalidFileNameChars())
+            foreach (char c in Path.GetInvalidFileNameChars())
+            {
                 nombre = nombre.Replace(c, '_');
+            }
+
             return nombre;
         }
     }

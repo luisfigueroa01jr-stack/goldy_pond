@@ -1,24 +1,20 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-/// <summary>
-/// Un villano de la cacería (Boss, Villana1, Villana2, Villana3). Lo agrega solo la Caceria al darle Play:
-/// no hay que ponerlo a mano.
-///  - Esperando: quieto detrás de la reja hasta que empieza la cacería.
-///  - Persiguiendo: camina (lento) hacia el jugador.
-///  - Deambulando: el jugador está a salvo (en una casa, el molino o el laberinto): camina por Goldy Pond.
-/// Camina con NavMeshAgent sobre el NavMesh que arma la Caceria, que no deja pasar a las casas ni al molino.
-/// Si llega junto al jugador, lo atrapa (la Caceria hace el final).
-/// </summary>
+// Un villano de la caceria (Boss, Villana1, Villana2, Villana3). Lo agrega solo la Caceria al darle Play:
+// no hay que ponerlo a mano.
+// - Esperando: quieto detras de la reja hasta que empieza la caceria.
+// - Persiguiendo: camina (lento) hacia el jugador.
+// - Deambulando: el jugador esta a salvo (en una casa, el molino o el laberinto): camina por Goldy Pond.
+// Camina con NavMeshAgent sobre el NavMesh que arma la Caceria, que no deja pasar a las casas ni al molino.
+// Si llega junto al jugador, lo atrapa (la Caceria hace el final).
 public class Villano : MonoBehaviour
 {
     public enum Estado { Esperando, Persiguiendo, Deambulando, Regresando, Patrullando, Quieto }
 
-    /// <summary>
-    /// Como persigue (para que no vayan todos en fila y te acorralen):
-    /// Empuja = directo detras de ti. Rodea = se abre por un costado. Corta = se adelanta a donde huyes.
-    /// Intercepta = va a donde vas a estar en unos segundos.
-    /// </summary>
+    // Como persigue (para que no vayan todos en fila y te acorralen):
+    // Empuja = directo detras de ti. Rodea = se abre por un costado. Corta = se adelanta a donde huyes.
+    // Intercepta = va a donde vas a estar en unos segundos.
     public enum Rol { Empuja, Rodea, Corta, Intercepta }
     [Header("Persecucion")]
     public Rol rol = Rol.Empuja;
@@ -41,21 +37,21 @@ public class Villano : MonoBehaviour
     [Tooltip("Grados que levanta la cabeza (el jefe viendo subir el elevador).")]
     public float mirarArriba;
 
-    /// <summary>Si esta puesto y regresa false, aunque te alcance no te atrapa (ej. dentro del molino, ya en el elevador).</summary>
+    // Si esta puesto y regresa false, aunque te alcance no te atrapa (ej. dentro del molino, ya en el elevador).
     public System.Func<bool> puedeAtrapar;
 
     public Estado EstadoActual { get; private set; } = Estado.Esperando;
     public float Altura { get; private set; } = 1.9f;
 
-    NavMeshAgent agente;
-    Transform modelo;          // lo que se balancea al caminar
-    Vector3 posModelo;
-    Quaternion rotModelo;
-    float siguienteRuta;
-    float fase;
+    private NavMeshAgent agente;
+    private Transform modelo;          // lo que se balancea al caminar
+    private Vector3 posModelo;
+    private Quaternion rotModelo;
+    private float siguienteRuta;
+    private float fase;
 
-    /// <summary>La Caceria lo prepara cuando ya existe el NavMesh.</summary>
-    public void Preparar(float altura, Vector3 centroAldea, float radioAldea)
+    // La Caceria lo prepara cuando ya existe el NavMesh.
+    public void preparar(float altura, Vector3 centroAldea, float radioAldea)
     {
         Altura = altura;
         this.centroAldea = centroAldea;
@@ -63,14 +59,24 @@ public class Villano : MonoBehaviour
         fase = Random.value * 10f;
 
         modelo = transform.childCount > 0 ? transform.GetChild(0) : null;
-        if (modelo != null) { posModelo = modelo.localPosition; rotModelo = modelo.localRotation; }
+        if (modelo != null)
+        {
+            posModelo = modelo.localPosition;
+            rotModelo = modelo.localRotation;
+        }
 
-        // Pegarlo al NavMesh (si quedó un poco arriba o abajo del suelo).
-        if (NavMesh.SamplePosition(transform.position, out var hit, 6f, NavMesh.AllAreas))
+        // Pegarlo al NavMesh (si quedo un poco arriba o abajo del suelo).
+        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 6f, NavMesh.AllAreas))
+        {
             transform.position = hit.position;
+        }
 
         agente = GetComponent<NavMeshAgent>();
-        if (agente == null) agente = gameObject.AddComponent<NavMeshAgent>();
+        if (agente == null)
+        {
+            agente = gameObject.AddComponent<NavMeshAgent>();
+        }
+
         agente.radius = 0.35f;
         agente.height = altura;
         agente.baseOffset = 0f;
@@ -87,47 +93,70 @@ public class Villano : MonoBehaviour
         rotLugar = transform.rotation;
     }
 
-    Vector3 lugar;          // donde espera detras de la reja
-    Quaternion rotLugar;
+    private Vector3 lugar;          // donde espera detras de la reja
+    private Quaternion rotLugar;
 
-    /// <summary>Ya llego a su lugar detras de la reja (al retirarse).</summary>
+    // Ya llego a su lugar detras de la reja (al retirarse).
     public bool EnSuLugar => agente == null || !agente.isOnNavMesh
         || Vector3.ProjectOnPlane(transform.position - lugar, Vector3.up).magnitude < 0.6f;
 
-    /// <summary>Lo pone en su lugar detras de la reja, quieto y mirando a la aldea.</summary>
-    public void VolverASuLugar()
+    // Lo pone en su lugar detras de la reja, quieto y mirando a la aldea.
+    public void volverASuLugar()
     {
-        if (agente != null && agente.isOnNavMesh) agente.Warp(lugar);
-        else transform.position = lugar;
+        if (agente != null && agente.isOnNavMesh)
+        {
+            agente.Warp(lugar);
+        }
+        else
+        {
+            transform.position = lugar;
+        }
+
         transform.rotation = rotLugar;
-        Cambiar(Estado.Esperando);
-        if (modelo != null) { modelo.localPosition = posModelo; modelo.localRotation = rotModelo; }
+        cambiar(Estado.Esperando);
+        if (modelo != null)
+        {
+            modelo.localPosition = posModelo;
+            modelo.localRotation = rotModelo;
+        }
     }
 
-    Vector3 centroAldea;
-    float radioAldea;
+    private Vector3 centroAldea;
+    private float radioAldea;
 
     public NavMeshAgent Agente => agente;
 
-    /// <summary>Donde se pasea cuando estas escondida (el jefe ronda cerca de donde te metiste).</summary>
-    public void CentrarPaseo(Vector3 centro, float radio)
+    // Donde se pasea cuando estas escondida (el jefe ronda cerca de donde te metiste).
+    public void centrarPaseo(Vector3 centro, float radio)
     {
         centroAldea = centro;
         radioAldea = radio;
         siguienteRuta = 0f;
-        if (EstadoActual == Estado.Deambulando && agente != null && agente.isOnNavMesh) agente.ResetPath();
+        if (EstadoActual == Estado.Deambulando && agente != null && agente.isOnNavMesh)
+        {
+            agente.ResetPath();
+        }
     }
 
-    /// <summary>Patrulla (la villana del laberinto): camina hacia "destino" a velocidadPersiguiendo.</summary>
-    public void IrA(Vector3 destino)
+    // Patrulla (la villana del laberinto): camina hacia "destino" a velocidadPersiguiendo.
+    public void irA(Vector3 destino)
     {
-        Cambiar(Estado.Patrullando);
-        if (agente != null && agente.isOnNavMesh) { agente.isStopped = false; agente.SetDestination(destino); }
+        cambiar(Estado.Patrullando);
+        if (agente != null && agente.isOnNavMesh)
+        {
+            agente.isStopped = false;
+            agente.SetDestination(destino);
+        }
     }
 
-    public void Cambiar(Estado nuevo)
+    public void cambiar(Estado nuevo)
     {
-        if (agente == null || !agente.isOnNavMesh || EstadoActual == nuevo) { EstadoActual = nuevo; return; }
+        if (agente == null || !agente.isOnNavMesh || EstadoActual == nuevo)
+        {
+            EstadoActual = nuevo;
+            return;
+        }
+
         EstadoActual = nuevo;
         siguienteRuta = 0f;
         switch (nuevo)
@@ -150,27 +179,42 @@ public class Villano : MonoBehaviour
         }
     }
 
-    void Update()
+    private void Update()
     {
-        if (agente == null || !agente.isOnNavMesh) return;
-        var jugador = JugadorPrimeraPersona.Instancia;
+        if (agente == null || !agente.isOnNavMesh)
+        {
+            return;
+        }
+
+        JugadorPrimeraPersona jugador = JugadorPrimeraPersona.Instancia;
 
         if (EstadoActual == Estado.Persiguiendo && jugador != null)
         {
             if (Time.time >= siguienteRuta)
             {
                 siguienteRuta = Time.time + Random.Range(0.25f, 0.45f);
-                var c = Caceria.Instancia;
-                var destino = c != null ? c.ObjetivoPara(this) : jugador.transform.position;
-                if (c == null && NavMesh.SamplePosition(destino, out var cerca, 3f, NavMesh.AllAreas)) destino = cerca.position;
+                Caceria c = Caceria.Instancia;
+                Vector3 destino = c != null ? c.objetivoPara(this) : jugador.transform.position;
+                if (c == null && NavMesh.SamplePosition(destino, out NavMeshHit cerca, 3f, NavMesh.AllAreas))
+                {
+                    destino = cerca.position;
+                }
+
                 agente.SetDestination(destino);
             }
-            var diferencia = jugador.transform.position - transform.position;
+
+            Vector3 diferencia = jugador.transform.position - transform.position;
             if (new Vector2(diferencia.x, diferencia.z).magnitude < distanciaAtrapar && Mathf.Abs(diferencia.y) < 2.5f
                 && (puedeAtrapar == null || puedeAtrapar()))
             {
-                if (Caceria.Instancia != null) Caceria.Instancia.Atrapar(this);
-                else Caceria.AtraparFuera(this); // en el subterraneo no hay Caceria
+                if (Caceria.Instancia != null)
+                {
+                    Caceria.Instancia.atrapar(this);
+                }
+                else
+                {
+                    Caceria.atraparFuera(this); // en el subterraneo no hay Caceria
+                }
             }
         }
         else if (EstadoActual == Estado.Deambulando)
@@ -178,27 +222,27 @@ public class Villano : MonoBehaviour
             if (Time.time >= siguienteRuta && (!agente.hasPath || agente.remainingDistance < 1f))
             {
                 siguienteRuta = Time.time + Random.Range(1.5f, 4f); // se queda un ratito y luego a otro lado
-                var punto = centroAldea + Random.insideUnitSphere * radioAldea;
-                if (NavMesh.SamplePosition(punto, out var hit, 5f, NavMesh.AllAreas))
+                Vector3 punto = centroAldea + Random.insideUnitSphere * radioAldea;
+                if (NavMesh.SamplePosition(punto, out NavMeshHit hit, 5f, NavMesh.AllAreas))
+                {
                     agente.SetDestination(hit.position);
+                }
             }
         }
 
-        Arrastrarse();
-        Girar();
-        Postura();
+        moverArrastrandose();
+        girar();
+        postura();
     }
 
-    float jalon;          // 0..1 dentro de cada jalon
-    float empuje;         // que tan fuerte esta jalando ahora (0 = deslizandose, 1 = jalon)
-    float inclinacionActual, ladeoActual;
-    float yawAnterior;
+    private float jalon;          // 0..1 dentro de cada jalon
+    private float empuje;         // que tan fuerte esta jalando ahora (0 = deslizandose, 1 = jalon)
+    private float inclinacionActual, ladeoActual;
+    private float yawAnterior;
 
-    /// <summary>
-    /// No caminan: se arrastran a jalones. Cada jalon empieza rapido (se impulsan) y se va frenando
-    /// (se deslizan), como si se jalaran del suelo. La velocidad promedio queda cerca de la velocidad elegida.
-    /// </summary>
-    void Arrastrarse()
+    // No caminan: se arrastran a jalones. Cada jalon empieza rapido (se impulsan) y se va frenando
+    // (se deslizan), como si se jalaran del suelo. La velocidad promedio queda cerca de la velocidad elegida.
+    private void moverArrastrandose()
     {
         bool persigue = EstadoActual == Estado.Persiguiendo || EstadoActual == Estado.Patrullando;
         float baseVel = persigue ? velocidadPersiguiendo
@@ -206,28 +250,38 @@ public class Villano : MonoBehaviour
                       : velocidadDeambulando;
         float duracion = persigue ? duracionJalon : duracionJalon * 1.5f;
         jalon += Time.deltaTime / duracion;
-        if (jalon >= 1f) jalon -= 1f;
+        if (jalon >= 1f)
+        {
+            jalon -= 1f;
+        }
+
         // Impulso fuerte al inicio del jalon y luego se apaga.
         empuje = Mathf.Pow(1f - jalon, 2.2f);
         agente.speed = baseVel * Mathf.Lerp(0.55f, 1.6f, empuje);
     }
 
-    /// <summary>Se voltea suave hacia donde va (no de golpe).</summary>
-    void Girar()
+    // Se voltea suave hacia donde va (no de golpe).
+    private void girar()
     {
-        var v = Vector3.ProjectOnPlane(agente.velocity, Vector3.up);
-        if (v.sqrMagnitude < 0.04f) return;
-        var objetivo = Quaternion.LookRotation(v, Vector3.up);
+        Vector3 v = Vector3.ProjectOnPlane(agente.velocity, Vector3.up);
+        if (v.sqrMagnitude < 0.04f)
+        {
+            return;
+        }
+
+        Quaternion objetivo = Quaternion.LookRotation(v, Vector3.up);
         transform.rotation = Quaternion.Slerp(transform.rotation, objetivo, 1f - Mathf.Exp(-6f * Time.deltaTime));
     }
 
-    /// <summary>
-    /// Cuerpo agachado hacia adelante (mas en cada jalon), ladeado hacia dentro de las curvas
-    /// y meciendose despacio. Sin saltitos.
-    /// </summary>
-    void Postura()
+    // Cuerpo agachado hacia adelante (mas en cada jalon), ladeado hacia dentro de las curvas
+    // y meciendose despacio. Sin saltitos.
+    private void postura()
     {
-        if (modelo == null) return;
+        if (modelo == null)
+        {
+            return;
+        }
+
         float rapidez = Mathf.Clamp01(agente.velocity.magnitude / Mathf.Max(0.1f, velocidadPersiguiendo));
         float yaw = transform.eulerAngles.y;
         float giro = Mathf.DeltaAngle(yawAnterior, yaw) / Mathf.Max(Time.deltaTime, 0.0001f); // grados/s
@@ -247,11 +301,19 @@ public class Villano : MonoBehaviour
         modelo.localRotation = Quaternion.Euler(inclinacionActual - mirarArriba, mecer, ladeoActual + mecer * 0.4f) * rotModelo;
     }
 
-    /// <summary>Voltea a ver al jugador (cuando lo atrapa).</summary>
-    public void MirarHacia(Vector3 punto)
+    // Voltea a ver al jugador (cuando lo atrapa).
+    public void mirarHacia(Vector3 punto)
     {
-        var d = Vector3.ProjectOnPlane(punto - transform.position, Vector3.up);
-        if (d.sqrMagnitude > 0.001f) transform.rotation = Quaternion.LookRotation(d, Vector3.up);
-        if (modelo != null) { modelo.localPosition = posModelo; modelo.localRotation = rotModelo; }
+        Vector3 d = Vector3.ProjectOnPlane(punto - transform.position, Vector3.up);
+        if (d.sqrMagnitude > 0.001f)
+        {
+            transform.rotation = Quaternion.LookRotation(d, Vector3.up);
+        }
+
+        if (modelo != null)
+        {
+            modelo.localPosition = posModelo;
+            modelo.localRotation = rotModelo;
+        }
     }
 }

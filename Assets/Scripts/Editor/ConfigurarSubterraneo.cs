@@ -5,84 +5,102 @@ using UnityEngine;
 
 namespace GoldyPond.EditorTools
 {
-    /// <summary>
-    /// Conecta la Aldea con el Subterraneo:
-    ///  - Agrega Aldea y Subterraneo a la lista de escenas (File > Build Profiles), Aldea primero.
-    ///  - Subterraneo: la Escalera_Entrada_Molino se puede trepar (Escalera), arriba sale "(E) Subir a la Aldea"
-    ///    (CambioEscena) y ahi apareces al bajar por la trampilla (PuntoLlegada "Escalera").
-    ///  - Aldea: sobre la trampilla del molino sale "(E) Entrar al subterráneo" cuando ya esta abierta,
-    ///    y junto a ella apareces al regresar (PuntoLlegada "Trampilla").
-    /// Se aplica solo una vez; despues se puede repetir desde Goldy Pond > Interaccion.
-    /// </summary>
+    // Conecta la Aldea con el Subterraneo:
+    // - Agrega Aldea y Subterraneo a la lista de escenas (File > Build Profiles), Aldea primero.
+    // - Subterraneo: la Escalera_Entrada_Molino se puede trepar (Escalera), arriba sale "(E) Subir a la Aldea"
+    // (CambioEscena) y ahi apareces al bajar por la trampilla (PuntoLlegada "Escalera").
+    // - Aldea: sobre la trampilla del molino sale "(E) Entrar al subterraneo" cuando ya esta abierta,
+    // y junto a ella apareces al regresar (PuntoLlegada "Trampilla").
+    // Se aplica solo una vez; despues se puede repetir desde Goldy Pond > Interaccion.
     [InitializeOnLoad]
     public static class ConfigurarSubterraneo
     {
-        const string EscenaAldea = "Assets/Scenes/Aldea.unity";
-        const string EscenaSubterraneo = "Assets/Scenes/Subterraneo.unity";
-        const string PrefabAldea = "Assets/Prefabs/Aldea/Goldy_Pond_Colores.prefab";
-        const string PrefabSubterraneo = "Assets/Prefabs/Subterraneo/Subterraneo_Colores.prefab";
+        private const string ESCENA_ALDEA = "Assets/Scenes/Aldea.unity";
+        private const string ESCENA_SUBTERRANEO = "Assets/Scenes/Subterraneo.unity";
+        private const string PREFAB_ALDEA = "Assets/Prefabs/Aldea/Goldy_Pond_Colores.prefab";
+        private const string PREFAB_SUBTERRANEO = "Assets/Prefabs/Subterraneo/Subterraneo_Colores.prefab";
 
-        static string Clave => $"GoldyPond.Subterraneo.v1.{Application.dataPath}";
+        private static string Clave => $"GoldyPond.Subterraneo.v1.{Application.dataPath}";
 
         static ConfigurarSubterraneo()
         {
-            EditorApplication.delayCall += AplicarPendiente;
+            EditorApplication.delayCall += aplicarPendiente;
         }
 
-        static void AplicarPendiente()
+        private static void aplicarPendiente()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating)
             {
-                EditorApplication.delayCall += AplicarPendiente;
+                EditorApplication.delayCall += aplicarPendiente;
                 return;
             }
-            if (EditorPrefs.GetBool(Clave, false)) return;
+
+            if (EditorPrefs.GetBool(Clave, false))
+            {
+                return;
+            }
+
             EditorPrefs.SetBool(Clave, true);
-            Aplicar();
+            aplicar();
         }
 
         [MenuItem("Goldy Pond/Interaccion/Conectar Aldea y Subterraneo (trampilla y escalera)")]
-        public static void Aplicar()
+        public static void aplicar()
         {
-            AgregarEscenas();
-            ConfigurarEscalera();
-            ConfigurarTrampilla();
+            agregarEscenas();
+            configurarEscalera();
+            configurarTrampilla();
         }
 
-        static void AgregarEscenas()
+        private static void agregarEscenas()
         {
-            var lista = new List<EditorBuildSettingsScene>
+            List<EditorBuildSettingsScene> lista = new List<EditorBuildSettingsScene>
             {
-                new EditorBuildSettingsScene(EscenaAldea, true),
-                new EditorBuildSettingsScene(EscenaSubterraneo, true),
+                new EditorBuildSettingsScene(ESCENA_ALDEA, true),
+                new EditorBuildSettingsScene(ESCENA_SUBTERRANEO, true),
             };
-            foreach (var s in EditorBuildSettings.scenes)
-                if (s.path != EscenaAldea && s.path != EscenaSubterraneo) lista.Add(s);
+            foreach (EditorBuildSettingsScene s in EditorBuildSettings.scenes)
+            {
+                if (s.path != ESCENA_ALDEA && s.path != ESCENA_SUBTERRANEO)
+                {
+                    lista.Add(s);
+                }
+            }
+
             EditorBuildSettings.scenes = lista.ToArray();
             Debug.Log("[Goldy Pond] Escenas en el Build: " + string.Join(", ", lista.Select(s => System.IO.Path.GetFileNameWithoutExtension(s.path))));
         }
 
-        static void ConfigurarEscalera()
+        private static void configurarEscalera()
         {
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(PrefabSubterraneo) == null) { Debug.LogWarning($"[Goldy Pond] No existe {PrefabSubterraneo}"); return; }
-            var raiz = PrefabUtility.LoadPrefabContents(PrefabSubterraneo);
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(PREFAB_SUBTERRANEO) == null)
+            {
+                Debug.LogWarning($"[Goldy Pond] No existe {PREFAB_SUBTERRANEO}");
+                return;
+            }
+
+            GameObject raiz = PrefabUtility.LoadPrefabContents(PREFAB_SUBTERRANEO);
             try
             {
-                var t = raiz.GetComponentsInChildren<Transform>(true).FirstOrDefault(x => x.name.StartsWith("Escalera_Entrada_Molino"));
-                var mf = t != null ? t.GetComponent<MeshFilter>() : null;
-                if (mf == null || mf.sharedMesh == null) { Debug.LogWarning("[Goldy Pond] No encontre Escalera_Entrada_Molino en el Subterraneo."); return; }
+                Transform t = raiz.GetComponentsInChildren<Transform>(true).FirstOrDefault(x => x.name.StartsWith("Escalera_Entrada_Molino"));
+                MeshFilter mf = t != null ? t.GetComponent<MeshFilter>() : null;
+                if (mf == null || mf.sharedMesh == null)
+                {
+                    Debug.LogWarning("[Goldy Pond] No encontre Escalera_Entrada_Molino en el Subterraneo.");
+                    return;
+                }
 
-                var puntos = mf.sharedMesh.vertices.Select(v => t.TransformPoint(v)).ToArray();
+                Vector3[] puntos = mf.sharedMesh.vertices.Select(v => t.TransformPoint(v)).ToArray();
                 float minY = puntos.Min(p => p.y), maxY = puntos.Max(p => p.y);
-                var abajo = Promedio(puntos.Where(p => p.y < minY + 0.05f));
-                var arriba = Promedio(puntos.Where(p => p.y > maxY - 0.05f));
+                Vector3 abajo = promedio(puntos.Where(p => p.y < minY + 0.05f));
+                Vector3 arriba = promedio(puntos.Where(p => p.y > maxY - 0.05f));
                 // La escalera esta recargada: la punta se va hacia la pared. Uno se sube del otro lado.
-                var inclinacion = Vector3.ProjectOnPlane(arriba - abajo, Vector3.up);
-                var frente = inclinacion.sqrMagnitude > 0.0025f
+                Vector3 inclinacion = Vector3.ProjectOnPlane(arriba - abajo, Vector3.up);
+                Vector3 frente = inclinacion.sqrMagnitude > 0.0025f
                     ? -inclinacion.normalized
                     : Vector3.ProjectOnPlane(raiz.transform.position - abajo, Vector3.up).normalized;
 
-                var e = Obtener<Escalera>(t);
+                Escalera e = obtener<Escalera>(t);
                 e.abajoLocal = t.InverseTransformPoint(abajo);
                 e.arribaLocal = t.InverseTransformPoint(arriba);
                 e.frenteLocal = t.InverseTransformDirection(frente);
@@ -90,59 +108,87 @@ namespace GoldyPond.EditorTools
                 // Sin collider el jugador no la "ve" para mostrar el aviso de arriba.
                 if (t.GetComponentInChildren<Collider>(true) == null)
                 {
-                    var caja = t.gameObject.AddComponent<BoxCollider>();
+                    BoxCollider caja = t.gameObject.AddComponent<BoxCollider>();
                     caja.isTrigger = true;
-                    RecogiblesAutomaticos.AjustarCaja(caja);
+                    RecogiblesAutomaticos.ajustarCaja(caja);
                 }
 
-                var c = Obtener<CambioEscena>(t);
+                CambioEscena c = obtener<CambioEscena>(t);
                 c.texto = "Subir a la Aldea";
                 c.escenaDestino = "Aldea";
                 c.llegada = "Trampilla";
                 c.escalera = e;
                 c.trampilla = null;
 
-                var l = Obtener<PuntoLlegada>(t);
+                PuntoLlegada l = obtener<PuntoLlegada>(t);
                 l.id = "Escalera";
                 l.escalera = e;
 
-                PrefabUtility.SaveAsPrefabAsset(raiz, PrefabSubterraneo);
+                PrefabUtility.SaveAsPrefabAsset(raiz, PREFAB_SUBTERRANEO);
                 Debug.Log($"[Goldy Pond] Escalera del subterraneo lista: de {abajo.y:0.00} a {arriba.y:0.00} m de alto, frente {frente.x:0.00},{frente.z:0.00}.");
             }
-            finally { PrefabUtility.UnloadPrefabContents(raiz); }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(raiz);
+            }
         }
 
-        static void ConfigurarTrampilla()
+        private static void configurarTrampilla()
         {
-            if (AssetDatabase.LoadAssetAtPath<GameObject>(PrefabAldea) == null) { Debug.LogWarning($"[Goldy Pond] No existe {PrefabAldea}"); return; }
-            var raiz = PrefabUtility.LoadPrefabContents(PrefabAldea);
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(PREFAB_ALDEA) == null)
+            {
+                Debug.LogWarning($"[Goldy Pond] No existe {PREFAB_ALDEA}");
+                return;
+            }
+
+            GameObject raiz = PrefabUtility.LoadPrefabContents(PREFAB_ALDEA);
             try
             {
                 Transform marco = null, piso = null;
                 Trampilla trampilla = null;
-                foreach (var t in raiz.GetComponentsInChildren<Transform>(true))
+                foreach (Transform t in raiz.GetComponentsInChildren<Transform>(true))
                 {
-                    if (t.parent == null || t.parent.name != "Molino") continue;
-                    if (t.name.StartsWith("Trampilla_Marco")) marco = t;
-                    if (t.name.StartsWith("Piso_Planta_Baja")) piso = t;
-                    if (t.name.StartsWith("Trampilla_Tapa")) trampilla = t.GetComponent<Trampilla>();
-                }
-                var rMarco = marco != null ? marco.GetComponent<Renderer>() : null;
-                if (rMarco == null || trampilla == null) { Debug.LogWarning("[Goldy Pond] No encontre la trampilla del molino (marco o tapa con Trampilla)."); return; }
+                    if (t.parent == null || t.parent.name != "Molino")
+                    {
+                        continue;
+                    }
 
-                var b = rMarco.bounds;
-                var molino = marco.parent;
+                    if (t.name.StartsWith("Trampilla_Marco"))
+                    {
+                        marco = t;
+                    }
+
+                    if (t.name.StartsWith("Piso_Planta_Baja"))
+                    {
+                        piso = t;
+                    }
+
+                    if (t.name.StartsWith("Trampilla_Tapa"))
+                    {
+                        trampilla = t.GetComponent<Trampilla>();
+                    }
+                }
+
+                Renderer rMarco = marco != null ? marco.GetComponent<Renderer>() : null;
+                if (rMarco == null || trampilla == null)
+                {
+                    Debug.LogWarning("[Goldy Pond] No encontre la trampilla del molino (marco o tapa con Trampilla).");
+                    return;
+                }
+
+                Bounds b = rMarco.bounds;
+                Transform molino = marco.parent;
 
                 // Caja invisible encima del marco: ahi sale "(E) Entrar al subterráneo".
-                var entrada = Hijo(molino, "Entrada Subterraneo");
+                Transform entrada = hijo(molino, "Entrada Subterraneo");
                 entrada.SetPositionAndRotation(new Vector3(b.center.x, b.max.y, b.center.z), Quaternion.identity);
-                var caja = Obtener<BoxCollider>(entrada);
+                BoxCollider caja = obtener<BoxCollider>(entrada);
                 caja.isTrigger = true;
-                var escala = entrada.lossyScale;
-                var tamano = new Vector3(b.size.x, 1.2f, b.size.z);
+                Vector3 escala = entrada.lossyScale;
+                Vector3 tamano = new Vector3(b.size.x, 1.2f, b.size.z);
                 caja.size = new Vector3(tamano.x / escala.x, tamano.y / escala.y, tamano.z / escala.z);
                 caja.center = new Vector3(0f, 0.6f / escala.y, 0f);
-                var c = Obtener<CambioEscena>(entrada);
+                CambioEscena c = obtener<CambioEscena>(entrada);
                 c.texto = "Entrar al subterráneo";
                 c.escenaDestino = "Subterraneo";
                 c.llegada = "Escalera";
@@ -150,40 +196,51 @@ namespace GoldyPond.EditorTools
                 c.escalera = null;
 
                 // Al regresar: parado junto a la trampilla, del lado del centro del molino, dandole la espalda.
-                var haciaCentro = piso != null ? Vector3.ProjectOnPlane(piso.GetComponent<Renderer>().bounds.center - b.center, Vector3.up) : Vector3.forward;
-                if (haciaCentro.sqrMagnitude < 0.0001f) haciaCentro = Vector3.forward;
+                Vector3 haciaCentro = piso != null ? Vector3.ProjectOnPlane(piso.GetComponent<Renderer>().bounds.center - b.center, Vector3.up) : Vector3.forward;
+                if (haciaCentro.sqrMagnitude < 0.0001f)
+                {
+                    haciaCentro = Vector3.forward;
+                }
+
                 haciaCentro.Normalize();
-                var llegada = Hijo(molino, "Llegada desde Subterraneo");
-                var pie = new Vector3(b.center.x, b.max.y + 0.05f, b.center.z) + haciaCentro * (Mathf.Max(b.extents.x, b.extents.z) + 0.45f);
+                Transform llegada = hijo(molino, "Llegada desde Subterraneo");
+                Vector3 pie = new Vector3(b.center.x, b.max.y + 0.05f, b.center.z) + haciaCentro * (Mathf.Max(b.extents.x, b.extents.z) + 0.45f);
                 llegada.SetPositionAndRotation(pie, Quaternion.LookRotation(haciaCentro, Vector3.up));
-                var l = Obtener<PuntoLlegada>(llegada);
+                PuntoLlegada l = obtener<PuntoLlegada>(llegada);
                 l.id = "Trampilla";
                 l.escalera = null;
 
-                PrefabUtility.SaveAsPrefabAsset(raiz, PrefabAldea);
+                PrefabUtility.SaveAsPrefabAsset(raiz, PREFAB_ALDEA);
                 Debug.Log("[Goldy Pond] Trampilla del molino: '(E) Entrar al subterráneo' listo, y punto de llegada junto a ella.");
             }
-            finally { PrefabUtility.UnloadPrefabContents(raiz); }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(raiz);
+            }
         }
 
-        static T Obtener<T>(Transform t) where T : Component
+        private static T obtener<T>(Transform t) where T : Component
         {
-            var c = t.GetComponent<T>();
+            T c = t.GetComponent<T>();
             return c != null ? c : t.gameObject.AddComponent<T>();
         }
 
-        static Transform Hijo(Transform padre, string nombre)
+        private static Transform hijo(Transform padre, string nombre)
         {
-            var t = padre.Find(nombre);
-            if (t != null) return t;
-            var go = new GameObject(nombre);
+            Transform t = padre.Find(nombre);
+            if (t != null)
+            {
+                return t;
+            }
+
+            GameObject go = new GameObject(nombre);
             go.transform.SetParent(padre, false);
             return go.transform;
         }
 
-        static Vector3 Promedio(IEnumerable<Vector3> puntos)
+        private static Vector3 promedio(IEnumerable<Vector3> puntos)
         {
-            var lista = puntos.ToList();
+            List<Vector3> lista = puntos.ToList();
             return lista.Count == 0 ? Vector3.zero : lista.Aggregate(Vector3.zero, (s, p) => s + p) / lista.Count;
         }
     }

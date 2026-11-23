@@ -3,12 +3,10 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-/// <summary>
-/// Barra de herramientas (hotbar) de la parte de abajo de la pantalla.
-/// Teclas 1-5 o la rueda del mouse (LB/RB en control) cambian la casilla seleccionada.
-/// Otros scripts guardan objetos con Agregar(...) y preguntan con Tiene(...) / ObjetoSeleccionado.
-/// La parte visual se crea con Construir() (lo hace el menu Goldy Pond > Interfaz).
-/// </summary>
+// Barra de herramientas (hotbar) de la parte de abajo de la pantalla.
+// Teclas 1-5 o la rueda del mouse (LB/RB en control) cambian la casilla seleccionada.
+// Otros scripts guardan objetos con Agregar(...) y preguntan con Tiene(...) / ObjetoSeleccionado.
+// La parte visual se crea con Construir() (lo hace el menu Goldy Pond > Interfaz).
 public class BarraHerramientas : MonoBehaviour
 {
     [Serializable]
@@ -51,248 +49,374 @@ public class BarraHerramientas : MonoBehaviour
 
     public Casilla[] casillas = new Casilla[0];
 
-    /// <summary>Se llama con el indice nuevo cada vez que cambia la casilla seleccionada.</summary>
+    // Se llama con el indice nuevo cada vez que cambia la casilla seleccionada.
     public event Action<int> AlCambiarSeleccion;
-    /// <summary>Se llama cuando se agrega o quita algo de la barra.</summary>
+    // Se llama cuando se agrega o quita algo de la barra.
     public event Action AlCambiarContenido;
 
-    public string ObjetoSeleccionado => Valida(seleccionada) ? casillas[seleccionada].objeto : null;
+    public string ObjetoSeleccionado => valida(seleccionada) ? casillas[seleccionada].objeto : null;
 
     // El sprite de casilla tiene 16 px de brillo alrededor de un cuadro de 128 (lienzo de 160).
-    const float FactorBrillo = 160f / 128f;
+    private const float FACTOR_BRILLO = 160f / 128f;
 
-    void Awake()
+    private void Awake()
     {
         Instancia = this;
-        if (!mostrarLaureles) QuitarLaureles();
+        if (!mostrarLaureles)
+        {
+            quitarLaureles();
+        }
+
         if (casillas.Length != numeroCasillas || Array.Exists(casillas, c => c == null || c.fondo == null))
-            Construir();
-        Refrescar(true);
+        {
+            construir();
+        }
+
+        refrescar(true);
     }
 
-    /// <summary>Borra los laureles que ya estaban construidos en la escena.</summary>
-    public void QuitarLaureles()
+    // Borra los laureles que ya estaban construidos en la escena.
+    public void quitarLaureles()
     {
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
-            var hijo = transform.GetChild(i).gameObject;
-            if (!hijo.name.StartsWith("Laurel")) continue;
-            if (Application.isPlaying) Destroy(hijo); else DestroyImmediate(hijo);
+            GameObject hijo = transform.GetChild(i).gameObject;
+            if (!hijo.name.StartsWith("Laurel"))
+            {
+                continue;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(hijo);
+            }else
+            {
+                DestroyImmediate(hijo);
+            }
         }
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
-        if (Instancia == this) Instancia = null;
+        if (Instancia == this)
+        {
+            Instancia = null;
+        }
     }
 
-    void Update()
+    private void Update()
     {
         int nueva = seleccionada;
 
-        var teclado = Keyboard.current;
+        Keyboard teclado = Keyboard.current;
         if (teclado != null)
+        {
             for (int i = 0; i < Mathf.Min(numeroCasillas, 9); i++)
+            {
                 if (teclado[Key.Digit1 + i].wasPressedThisFrame || teclado[Key.Numpad1 + i].wasPressedThisFrame)
+                {
                     nueva = i;
+                }
+            }
+        }
 
-        var mouse = Mouse.current;
+        Mouse mouse = Mouse.current;
         if (mouse != null && Cursor.lockState == CursorLockMode.Locked)
         {
             float rueda = mouse.scroll.ReadValue().y;
-            if (rueda < -0.1f) nueva = seleccionada + 1;
-            else if (rueda > 0.1f) nueva = seleccionada - 1;
+            if (rueda < -0.1f)
+            {
+                nueva = seleccionada + 1;
+            }
+            else if (rueda > 0.1f)
+            {
+                nueva = seleccionada - 1;
+            }
         }
 
-        var control = Gamepad.current;
+        Gamepad control = Gamepad.current;
         if (control != null)
         {
-            if (control.rightShoulder.wasPressedThisFrame) nueva = seleccionada + 1;
-            if (control.leftShoulder.wasPressedThisFrame) nueva = seleccionada - 1;
+            if (control.rightShoulder.wasPressedThisFrame)
+            {
+                nueva = seleccionada + 1;
+            }
+
+            if (control.leftShoulder.wasPressedThisFrame)
+            {
+                nueva = seleccionada - 1;
+            }
         }
 
         nueva = (nueva % numeroCasillas + numeroCasillas) % numeroCasillas;
-        if (nueva != seleccionada) Seleccionar(nueva);
+        if (nueva != seleccionada)
+        {
+            seleccionar(nueva);
+        }
 
-        AnimarSeleccion(Time.unscaledDeltaTime);
+        animarSeleccion(Time.unscaledDeltaTime);
     }
 
-    // ---------- API para otros scripts ----------
+    // ------------------- API PARA OTROS SCRIPTS ------------------------------
 
-    public void Seleccionar(int indice)
+    public void seleccionar(int indice)
     {
-        if (!Valida(indice)) return;
+        if (!valida(indice))
+        {
+            return;
+        }
+
         seleccionada = indice;
-        Refrescar(false);
+        refrescar(false);
         AlCambiarSeleccion?.Invoke(indice);
     }
 
-    /// <summary>Pone directamente un objeto en una casilla (objeto vacio = casilla libre). Lo usa EstadoJuego al cambiar de escena.</summary>
-    public void Poner(int indice, string objeto, Sprite icono, int cantidad)
+    // Pone directamente un objeto en una casilla (objeto vacio = casilla libre). Lo usa EstadoJuego al cambiar de escena.
+    public void poner(
+        int indice,
+        string objeto,
+        Sprite icono,
+        int cantidad
+    )
     {
-        if (!Valida(indice)) return;
-        var c = casillas[indice];
+        if (!valida(indice))
+        {
+            return;
+        }
+
+        Casilla c = casillas[indice];
         bool vacia = string.IsNullOrEmpty(objeto) || cantidad <= 0;
         c.objeto = vacia ? null : objeto;
         c.cantidad = vacia ? 0 : cantidad;
         c.icono.sprite = vacia ? null : icono;
-        Refrescar(false);
+        refrescar(false);
         AlCambiarContenido?.Invoke();
     }
 
-    /// <summary>Guarda un objeto. Si ya existe se suma la cantidad. Devuelve false si la barra esta llena.</summary>
-    public bool Agregar(string objeto, Sprite icono, int cantidad = 1)
+    // Guarda un objeto. Si ya existe se suma la cantidad. Devuelve false si la barra esta llena.
+    public bool agregar(string objeto, Sprite icono, int cantidad = 1)
     {
-        int i = Buscar(objeto);
-        if (i < 0) i = Array.FindIndex(casillas, c => c.Libre);
-        if (i < 0) return false;
+        int i = buscar(objeto);
+        if (i < 0)
+        {
+            i = Array.FindIndex(casillas, c => c.Libre);
+        }
 
-        var c = casillas[i];
-        if (c.Libre) { c.objeto = objeto; c.cantidad = 0; }
+        if (i < 0)
+        {
+            return false;
+        }
+
+        Casilla c = casillas[i];
+        if (c.Libre)
+        {
+            c.objeto = objeto;
+            c.cantidad = 0;
+        }
+
         c.cantidad += cantidad;
-        if (icono != null) c.icono.sprite = icono;
-        Refrescar(false);
+        if (icono != null)
+        {
+            c.icono.sprite = icono;
+        }
+
+        refrescar(false);
         AlCambiarContenido?.Invoke();
         return true;
     }
 
-    /// <summary>Quita una cantidad del objeto; si llega a 0 la casilla queda libre.</summary>
-    public bool Quitar(string objeto, int cantidad = 1)
+    // Quita una cantidad del objeto; si llega a 0 la casilla queda libre.
+    public bool quitar(string objeto, int cantidad = 1)
     {
-        int i = Buscar(objeto);
-        if (i < 0) return false;
-        var c = casillas[i];
+        int i = buscar(objeto);
+        if (i < 0)
+        {
+            return false;
+        }
+
+        Casilla c = casillas[i];
         c.cantidad -= cantidad;
-        if (c.cantidad <= 0) { c.objeto = null; c.cantidad = 0; c.icono.sprite = null; }
-        Refrescar(false);
+        if (c.cantidad <= 0)
+        {
+            c.objeto = null;
+            c.cantidad = 0;
+            c.icono.sprite = null;
+        }
+
+        refrescar(false);
         AlCambiarContenido?.Invoke();
         return true;
     }
 
-    public bool Tiene(string objeto) => Buscar(objeto) >= 0;
-    public int Cantidad(string objeto) { int i = Buscar(objeto); return i < 0 ? 0 : casillas[i].cantidad; }
+    public bool tieneObjeto(string objeto)
+    {
+        return buscar(objeto) >= 0;
+    }
 
-    int Buscar(string objeto) =>
-        string.IsNullOrEmpty(objeto) ? -1 : Array.FindIndex(casillas, c => c.objeto == objeto);
+    public int obtenerCantidad(string objeto)
+    {
+        int i = buscar(objeto);
+        return i < 0 ? 0 : casillas[i].cantidad;
+    }
 
-    bool Valida(int i) => i >= 0 && i < casillas.Length && casillas[i] != null;
+    private int buscar(string objeto)
+    {
+        return string.IsNullOrEmpty(objeto) ? -1 : Array.FindIndex(casillas, c => c.objeto == objeto);
+    }
 
-    // ---------- Visual ----------
+    private bool valida(int i)
+    {
+        return i >= 0 && i < casillas.Length && casillas[i] != null;
+    }
 
-    void Refrescar(bool inmediato)
+    // ------------------- VISUAL ------------------------------
+
+    private void refrescar(bool inmediato)
     {
         for (int i = 0; i < casillas.Length; i++)
         {
-            var c = casillas[i];
-            if (c == null || c.fondo == null) continue;
+            Casilla c = casillas[i];
+            if (c == null || c.fondo == null)
+            {
+                continue;
+            }
+
             bool sel = i == seleccionada;
             c.fondo.sprite = sel ? spriteCasillaSeleccionada : spriteCasilla;
             c.numero.color = sel ? colorNumeroSeleccionado : colorNumero;
             c.icono.enabled = !c.Libre && c.icono.sprite != null;
             c.textoCantidad.text = c.cantidad > 1 ? c.cantidad.ToString() : "";
             if (inmediato)
+            {
                 c.fondo.rectTransform.localScale = Vector3.one * (sel ? escalaSeleccionada : 1f);
+            }
         }
     }
 
-    void AnimarSeleccion(float dt)
+    private void animarSeleccion(float dt)
     {
-        foreach (var c in casillas)
+        foreach (Casilla c in casillas)
         {
-            if (c == null || c.fondo == null) continue;
+            if (c == null || c.fondo == null)
+            {
+                continue;
+            }
+
             float objetivo = ReferenceEquals(c, casillas[seleccionada]) ? escalaSeleccionada : 1f;
-            var t = c.fondo.rectTransform;
+            RectTransform t = c.fondo.rectTransform;
             t.localScale = Vector3.one * Mathf.Lerp(t.localScale.x, objetivo, 1f - Mathf.Exp(-18f * dt));
         }
     }
 
-    /// <summary>Crea (o vuelve a crear) todos los hijos visuales de la barra.</summary>
-    public void Construir()
+    // Crea (o vuelve a crear) todos los hijos visuales de la barra.
+    public void construir()
     {
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
-            var hijo = transform.GetChild(i).gameObject;
-            if (Application.isPlaying) Destroy(hijo); else DestroyImmediate(hijo);
+            GameObject hijo = transform.GetChild(i).gameObject;
+            if (Application.isPlaying)
+            {
+                Destroy(hijo);
+            }else
+            {
+                DestroyImmediate(hijo);
+            }
         }
 
-        var letra = fuente != null ? fuente : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        Font letra = fuente != null ? fuente : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         float ancho = numeroCasillas * tamanoCasilla + (numeroCasillas - 1) * separacion + 2 * relleno;
         float alto = tamanoCasilla + 2 * relleno;
 
-        var raiz = (RectTransform)transform;
+        RectTransform raiz = (RectTransform)transform;
         raiz.anchorMin = raiz.anchorMax = new Vector2(0.5f, 0f);
         raiz.pivot = new Vector2(0.5f, 0f);
         raiz.anchoredPosition = new Vector2(0f, distanciaAbajo);
         raiz.sizeDelta = new Vector2(ancho, alto);
 
-        var marco = CrearImagen("Marco", raiz, spriteMarco, Image.Type.Sliced);
-        Estirar(marco.rectTransform);
+        Image marco = crearImagen("Marco", raiz, spriteMarco, Image.Type.Sliced);
+        estirar(marco.rectTransform);
 
         // Laureles a los lados (apagados por defecto).
-        if (mostrarLaureles) CrearLaureles(raiz);
+        if (mostrarLaureles)
+        {
+            crearLaureles(raiz);
+        }
 
         casillas = new Casilla[numeroCasillas];
         for (int i = 0; i < numeroCasillas; i++)
         {
-            var c = new Casilla();
+            Casilla c = new Casilla();
             float x = relleno + tamanoCasilla * 0.5f + i * (tamanoCasilla + separacion);
 
-            var hueco = new GameObject($"Casilla {i + 1}", typeof(RectTransform)).GetComponent<RectTransform>();
+            RectTransform hueco = new GameObject($"Casilla {i + 1}", typeof(RectTransform)).GetComponent<RectTransform>();
             hueco.SetParent(raiz, false);
-            Colocar(hueco, new Vector2(0f, 0.5f), new Vector2(x, 0f), Vector2.one * tamanoCasilla, Vector2.one * 0.5f);
+            colocar(hueco, new Vector2(0f, 0.5f), new Vector2(x, 0f), Vector2.one * tamanoCasilla, Vector2.one * 0.5f);
 
-            c.fondo = CrearImagen("Fondo", hueco, spriteCasilla, Image.Type.Sliced);
-            Colocar(c.fondo.rectTransform, Vector2.one * 0.5f, Vector2.zero, Vector2.one * tamanoCasilla * FactorBrillo, Vector2.one * 0.5f);
+            c.fondo = crearImagen("Fondo", hueco, spriteCasilla, Image.Type.Sliced);
+            colocar(c.fondo.rectTransform, Vector2.one * 0.5f, Vector2.zero, Vector2.one * tamanoCasilla * FACTOR_BRILLO, Vector2.one * 0.5f);
 
-            c.icono = CrearImagen("Icono", c.fondo.rectTransform, null, Image.Type.Simple);
+            c.icono = crearImagen("Icono", c.fondo.rectTransform, null, Image.Type.Simple);
             c.icono.preserveAspect = true;
-            Colocar(c.icono.rectTransform, Vector2.one * 0.5f, new Vector2(0f, tamanoCasilla * 0.06f),
+            colocar(c.icono.rectTransform, Vector2.one * 0.5f, new Vector2(0f, tamanoCasilla * 0.06f),
                     Vector2.one * tamanoCasilla * 0.62f, Vector2.one * 0.5f);
             c.icono.enabled = false;
 
-            c.numero = CrearTexto("Numero", c.fondo.rectTransform, letra, (i + 1).ToString(), Mathf.RoundToInt(tamanoCasilla * 0.24f), TextAnchor.LowerCenter);
-            Colocar(c.numero.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -tamanoCasilla * 0.30f),
+            c.numero = crearTexto("Numero", c.fondo.rectTransform, letra, (i + 1).ToString(), Mathf.RoundToInt(tamanoCasilla * 0.24f), TextAnchor.LowerCenter);
+            colocar(c.numero.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -tamanoCasilla * 0.30f),
                     new Vector2(tamanoCasilla * 0.6f, tamanoCasilla * 0.3f), new Vector2(0.5f, 0.5f));
 
-            c.textoCantidad = CrearTexto("Cantidad", c.fondo.rectTransform, letra, "", Mathf.RoundToInt(tamanoCasilla * 0.2f), TextAnchor.UpperRight);
-            Colocar(c.textoCantidad.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(tamanoCasilla * 0.22f, tamanoCasilla * 0.30f),
+            c.textoCantidad = crearTexto("Cantidad", c.fondo.rectTransform, letra, "", Mathf.RoundToInt(tamanoCasilla * 0.2f), TextAnchor.UpperRight);
+            colocar(c.textoCantidad.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(tamanoCasilla * 0.22f, tamanoCasilla * 0.30f),
                     new Vector2(tamanoCasilla * 0.4f, tamanoCasilla * 0.25f), new Vector2(0.5f, 0.5f));
 
             casillas[i] = c;
         }
+
         seleccionada = Mathf.Clamp(seleccionada, 0, numeroCasillas - 1);
-        Refrescar(true);
+        refrescar(true);
     }
 
-    void CrearLaureles(RectTransform raiz)
+    private void crearLaureles(RectTransform raiz)
     {
         float altoLaurel = tamanoLaurel * 176f / 128f;
-        var izq = CrearImagen("Laurel izquierdo", raiz, spriteLaurel, Image.Type.Simple);
-        Colocar(izq.rectTransform, new Vector2(0f, 0f), new Vector2(-tamanoLaurel * 0.45f, -altoLaurel * 0.12f),
+        Image izq = crearImagen("Laurel izquierdo", raiz, spriteLaurel, Image.Type.Simple);
+        colocar(izq.rectTransform, new Vector2(0f, 0f), new Vector2(-tamanoLaurel * 0.45f, -altoLaurel * 0.12f),
                 new Vector2(tamanoLaurel, altoLaurel), new Vector2(0.5f, 0f));
-        var der = CrearImagen("Laurel derecho", raiz, spriteLaurel, Image.Type.Simple);
-        Colocar(der.rectTransform, new Vector2(1f, 0f), new Vector2(tamanoLaurel * 0.45f, -altoLaurel * 0.12f),
+        Image der = crearImagen("Laurel derecho", raiz, spriteLaurel, Image.Type.Simple);
+        colocar(der.rectTransform, new Vector2(1f, 0f), new Vector2(tamanoLaurel * 0.45f, -altoLaurel * 0.12f),
                 new Vector2(tamanoLaurel, altoLaurel), new Vector2(0.5f, 0f));
         der.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
 
     }
 
-    static Image CrearImagen(string nombre, Transform padre, Sprite sprite, Image.Type tipo)
+    private static Image crearImagen(
+        string nombre,
+        Transform padre,
+        Sprite sprite,
+        Image.Type tipo
+    )
     {
-        var go = new GameObject(nombre, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        GameObject go = new GameObject(nombre, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
         go.transform.SetParent(padre, false);
-        var img = go.GetComponent<Image>();
+        Image img = go.GetComponent<Image>();
         img.sprite = sprite;
         img.type = tipo;
         img.raycastTarget = false;
         return img;
     }
 
-    static Text CrearTexto(string nombre, Transform padre, Font letra, string texto, int tamano, TextAnchor alineacion)
+    private static Text crearTexto(
+        string nombre,
+        Transform padre,
+        Font letra,
+        string texto,
+        int tamano,
+        TextAnchor alineacion
+    )
     {
-        var go = new GameObject(nombre, typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
+        GameObject go = new GameObject(nombre, typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
         go.transform.SetParent(padre, false);
-        var t = go.GetComponent<Text>();
+        Text t = go.GetComponent<Text>();
         t.font = letra;
         t.text = texto;
         t.fontSize = tamano;
@@ -300,20 +424,26 @@ public class BarraHerramientas : MonoBehaviour
         t.raycastTarget = false;
         t.horizontalOverflow = HorizontalWrapMode.Overflow;
         t.verticalOverflow = VerticalWrapMode.Overflow;
-        var sombra = go.AddComponent<Shadow>();
+        Shadow sombra = go.AddComponent<Shadow>();
         sombra.effectColor = new Color(0.2f, 0.1f, 0.2f, 0.6f);
         sombra.effectDistance = new Vector2(1f, -1f);
         return t;
     }
 
-    static void Estirar(RectTransform t)
+    private static void estirar(RectTransform t)
     {
         t.anchorMin = Vector2.zero;
         t.anchorMax = Vector2.one;
         t.offsetMin = t.offsetMax = Vector2.zero;
     }
 
-    static void Colocar(RectTransform t, Vector2 ancla, Vector2 posicion, Vector2 tamano, Vector2 pivote)
+    private static void colocar(
+        RectTransform t,
+        Vector2 ancla,
+        Vector2 posicion,
+        Vector2 tamano,
+        Vector2 pivote
+    )
     {
         t.anchorMin = t.anchorMax = ancla;
         t.pivot = pivote;

@@ -7,18 +7,16 @@ using UnityEngine.UI;
 
 namespace GoldyPond.EditorTools
 {
-    /// <summary>
-    /// Pone la barra de herramientas (HUD con 5 casillas) abajo de la pantalla en Aldea, Subterraneo y Laberinto.
-    /// Se aplica sola una vez por escena; despues se puede repetir desde el menu Goldy Pond > Interfaz.
-    /// </summary>
+    // Pone la barra de herramientas (HUD con 5 casillas) abajo de la pantalla en Aldea, Subterraneo y Laberinto.
+    // Se aplica sola una vez por escena; despues se puede repetir desde el menu Goldy Pond > Interfaz.
     [InitializeOnLoad]
     public static class CrearBarraHerramientas
     {
-        const string CarpetaSprites = "Assets/UI/Barra de herramientas";
-        static readonly string[] Escenas = { "Aldea", "Subterraneo", "Laberinto" };
+        private const string CARPETA_SPRITES = "Assets/UI/Barra de herramientas";
+        private static readonly string[] Escenas = { "Aldea", "Subterraneo", "Laberinto" };
 
         // (nombre, borde 9-slice izquierda/abajo/derecha/arriba)
-        static readonly (string archivo, Vector4 borde)[] Sprites =
+        private static readonly (string archivo, Vector4 borde)[] Sprites =
         {
             ("Marco", new Vector4(48, 48, 48, 48)),
             ("Casilla", new Vector4(40, 40, 40, 40)),
@@ -26,73 +24,95 @@ namespace GoldyPond.EditorTools
             ("Laurel", Vector4.zero),
         };
 
-        static string Clave(string escena) => $"GoldyPond.BarraHerramientas.{Application.dataPath}.{escena}";
+        private static string clave(string escena)
+        {
+            return $"GoldyPond.BarraHerramientas.{Application.dataPath}.{escena}";
+        }
 
         static CrearBarraHerramientas()
         {
-            EditorApplication.delayCall += AplicarPendientes;
+            EditorApplication.delayCall += aplicarPendientes;
         }
 
-        static void AplicarPendientes()
+        private static void aplicarPendientes()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating)
             {
-                EditorApplication.delayCall += AplicarPendientes;
+                EditorApplication.delayCall += aplicarPendientes;
                 return;
             }
-            foreach (var e in Escenas)
-                if (!EditorPrefs.GetBool(Clave(e), false))
-                    AplicarAEscena(e);
+
+            foreach (string e in Escenas)
+            {
+                if (!EditorPrefs.GetBool(clave(e), false))
+                {
+                    aplicarAEscena(e);
+                }
+            }
         }
 
         [MenuItem("Goldy Pond/Interfaz/Agregar barra de herramientas a Aldea y Subterraneo")]
-        static void MenuAmbas()
+        private static void menuAmbas()
         {
-            foreach (var e in Escenas)
-                AplicarAEscena(e);
+            foreach (string e in Escenas)
+            {
+                aplicarAEscena(e);
+            }
         }
 
         [MenuItem("Goldy Pond/Interfaz/Agregar barra de herramientas a la escena abierta")]
-        static void MenuEscenaAbierta()
+        private static void menuEscenaAbierta()
         {
-            var escena = SceneManager.GetActiveScene();
-            if (Configurar(escena))
+            Scene escena = SceneManager.GetActiveScene();
+            if (configurar(escena))
+            {
                 EditorSceneManager.MarkSceneDirty(escena);
+            }
         }
 
         [MenuItem("Goldy Pond/Interfaz/Reconstruir barra seleccionada")]
-        static void MenuReconstruir()
+        private static void menuReconstruir()
         {
-            var barra = Selection.activeGameObject != null
+            BarraHerramientas barra = Selection.activeGameObject != null
                 ? Selection.activeGameObject.GetComponentInParent<BarraHerramientas>()
                 : Object.FindFirstObjectByType<BarraHerramientas>();
-            if (barra == null) { Debug.LogWarning("[Goldy Pond] No hay ninguna BarraHerramientas en la escena."); return; }
+            if (barra == null)
+            {
+                Debug.LogWarning("[Goldy Pond] No hay ninguna BarraHerramientas en la escena.");
+                return;
+            }
+
             Undo.RegisterFullObjectHierarchyUndo(barra.gameObject, "Reconstruir barra");
-            AsignarSprites(barra);
-            barra.Construir();
+            asignarSprites(barra);
+            barra.construir();
             EditorSceneManager.MarkSceneDirty(barra.gameObject.scene);
         }
 
-        static void AplicarAEscena(string nombre)
+        private static void aplicarAEscena(string nombre)
         {
-            var ruta = $"Assets/Scenes/{nombre}.unity";
+            string ruta = $"Assets/Scenes/{nombre}.unity";
             if (!System.IO.File.Exists(ruta))
+            {
                 return;
+            }
 
-            var escena = SceneManager.GetSceneByPath(ruta);
+            Scene escena = SceneManager.GetSceneByPath(ruta);
             bool yaAbierta = escena.IsValid() && escena.isLoaded;
             if (!yaAbierta)
             {
                 bool haySinTitulo = Enumerable.Range(0, SceneManager.sceneCount)
                     .Any(i => string.IsNullOrEmpty(SceneManager.GetSceneAt(i).path));
                 if (haySinTitulo)
+                {
                     return; // se reintenta en la proxima recarga
+                }
+
                 escena = EditorSceneManager.OpenScene(ruta, OpenSceneMode.Additive);
             }
 
             bool estabaSucia = escena.isDirty;
-            bool cambio = Configurar(escena);
-            EditorPrefs.SetBool(Clave(nombre), true);
+            bool cambio = configurar(escena);
+            EditorPrefs.SetBool(clave(nombre), true);
 
             if (cambio)
             {
@@ -107,69 +127,81 @@ namespace GoldyPond.EditorTools
                     Debug.Log($"[Goldy Pond] Barra de herramientas agregada y guardada en {ruta}.");
                 }
             }
+
             if (!yaAbierta)
+            {
                 EditorSceneManager.CloseScene(escena, true);
+            }
         }
 
-        /// <summary>Crea el Canvas "HUD" con la barra. Devuelve false si la escena ya tenia una barra.</summary>
-        public static bool Configurar(Scene escena)
+        // Crea el Canvas "HUD" con la barra. Devuelve false si la escena ya tenia una barra.
+        public static bool configurar(Scene escena)
         {
-            var raices = escena.GetRootGameObjects();
+            GameObject[] raices = escena.GetRootGameObjects();
             if (raices.Any(r => r.GetComponentInChildren<BarraHerramientas>(true) != null))
+            {
                 return false;
+            }
 
-            PrepararSprites();
+            prepararSprites();
 
-            var hud = new GameObject("HUD", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            GameObject hud = new GameObject("HUD", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             SceneManager.MoveGameObjectToScene(hud, escena);
             hud.layer = LayerMask.NameToLayer("UI");
-            var canvas = hud.GetComponent<Canvas>();
+            Canvas canvas = hud.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 10;
-            var escalador = hud.GetComponent<CanvasScaler>();
+            CanvasScaler escalador = hud.GetComponent<CanvasScaler>();
             escalador.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             escalador.referenceResolution = new Vector2(1920, 1080);
             escalador.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             escalador.matchWidthOrHeight = 0.5f;
 
-            var go = new GameObject("Barra de herramientas", typeof(RectTransform));
+            GameObject go = new GameObject("Barra de herramientas", typeof(RectTransform));
             go.layer = hud.layer;
             go.transform.SetParent(hud.transform, false);
-            var barra = go.AddComponent<BarraHerramientas>();
-            AsignarSprites(barra);
-            barra.Construir();
-            foreach (var t in go.GetComponentsInChildren<Transform>(true))
+            BarraHerramientas barra = go.AddComponent<BarraHerramientas>();
+            asignarSprites(barra);
+            barra.construir();
+            foreach (Transform t in go.GetComponentsInChildren<Transform>(true))
+            {
                 t.gameObject.layer = hud.layer;
+            }
 
             Undo.RegisterCreatedObjectUndo(hud, "Agregar barra de herramientas");
             return true;
         }
 
-        static void AsignarSprites(BarraHerramientas barra)
+        private static void asignarSprites(BarraHerramientas barra)
         {
-            barra.spriteMarco = Cargar("Marco");
-            barra.spriteCasilla = Cargar("Casilla");
-            barra.spriteCasillaSeleccionada = Cargar("CasillaSeleccionada");
-            barra.spriteLaurel = Cargar("Laurel");
+            barra.spriteMarco = cargar("Marco");
+            barra.spriteCasilla = cargar("Casilla");
+            barra.spriteCasillaSeleccionada = cargar("CasillaSeleccionada");
+            barra.spriteLaurel = cargar("Laurel");
             EditorUtility.SetDirty(barra);
         }
 
-        static Sprite Cargar(string archivo) =>
-            AssetDatabase.LoadAssetAtPath<Sprite>($"{CarpetaSprites}/{archivo}.png");
+        private static Sprite cargar(string archivo)
+        {
+            return AssetDatabase.LoadAssetAtPath<Sprite>($"{CARPETA_SPRITES}/{archivo}.png");
+        }
 
-        /// <summary>Importa los PNG como Sprite (UI) con sus bordes 9-slice. Solo los cambia si no son Sprite todavia.</summary>
-        static void PrepararSprites()
+        // Importa los PNG como Sprite (UI) con sus bordes 9-slice. Solo los cambia si no son Sprite todavia.
+        private static void prepararSprites()
         {
             foreach (var (archivo, borde) in Sprites)
             {
-                var ruta = $"{CarpetaSprites}/{archivo}.png";
+                string ruta = $"{CARPETA_SPRITES}/{archivo}.png";
                 if (!(AssetImporter.GetAtPath(ruta) is TextureImporter imp))
                 {
                     Debug.LogWarning($"[Goldy Pond] Falta {ruta}");
                     continue;
                 }
-                if (imp.textureType == TextureImporterType.Sprite && Cargar(archivo) != null)
+
+                if (imp.textureType == TextureImporterType.Sprite && cargar(archivo) != null)
+                {
                     continue;
+                }
 
                 imp.textureType = TextureImporterType.Sprite;
                 imp.spriteImportMode = SpriteImportMode.Single;
@@ -177,7 +209,7 @@ namespace GoldyPond.EditorTools
                 imp.mipmapEnabled = false;
                 imp.wrapMode = TextureWrapMode.Clamp;
                 imp.textureCompression = TextureImporterCompression.Uncompressed;
-                var ajustes = new TextureImporterSettings();
+                TextureImporterSettings ajustes = new TextureImporterSettings();
                 imp.ReadTextureSettings(ajustes);
                 ajustes.spriteBorder = borde;
                 ajustes.spriteMeshType = SpriteMeshType.FullRect;

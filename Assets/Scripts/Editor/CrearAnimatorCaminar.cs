@@ -3,17 +3,15 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 
-/// <summary>
-/// Menu: Goldy Pond > Crear Animator de caminar.
-/// Selecciona el .fbx del personaje (exportado de Blender con sus acciones)
-/// y crea un Animator Controller con un Blend Tree Quieto / Caminar / Correr
-/// controlado por el float "Velocidad" (0, 1, 2).
-/// Busca los clips por nombre: idle/quieto, walk/caminar, run/correr.
-/// </summary>
+// Menu: Goldy Pond > Crear Animator de caminar.
+// Selecciona el .fbx del personaje (exportado de Blender con sus acciones)
+// y crea un Animator Controller con un Blend Tree Quieto / Caminar / Correr
+// controlado por el float "Velocidad" (0, 1, 2).
+// Busca los clips por nombre: idle/quieto, walk/caminar, run/correr.
 public static class CrearAnimatorCaminar
 {
     [MenuItem("Goldy Pond/Crear Animator de caminar")]
-    static void Crear()
+    private static void crear()
     {
         string rutaFbx = AssetDatabase.GetAssetPath(Selection.activeObject);
         if (string.IsNullOrEmpty(rutaFbx) || !rutaFbx.ToLower().EndsWith(".fbx"))
@@ -22,17 +20,19 @@ public static class CrearAnimatorCaminar
             return;
         }
 
-        var clips = AssetDatabase.LoadAllAssetsAtPath(rutaFbx)
+        AnimationClip[] clips = AssetDatabase.LoadAllAssetsAtPath(rutaFbx)
             .OfType<AnimationClip>()
             .Where(c => !c.name.StartsWith("__preview__"))
             .ToArray();
 
-        AnimationClip Buscar(params string[] claves) =>
-            clips.FirstOrDefault(c => claves.Any(k => c.name.ToLower().Contains(k)));
+        AnimationClip buscar(params string[] claves)
+        {
+            return clips.FirstOrDefault(c => claves.Any(k => c.name.ToLower().Contains(k)));
+        }
 
-        var quieto = Buscar("idle", "quieto", "reposo");
-        var caminar = Buscar("walk", "caminar", "camina");
-        var correr = Buscar("run", "correr", "corre");
+        AnimationClip quieto = buscar("idle", "quieto", "reposo");
+        AnimationClip caminar = buscar("walk", "caminar", "camina");
+        AnimationClip correr = buscar("run", "correr", "corre");
 
         if (caminar == null)
         {
@@ -43,15 +43,23 @@ public static class CrearAnimatorCaminar
         }
 
         string rutaCtrl = System.IO.Path.ChangeExtension(rutaFbx, null) + "_Animator.controller";
-        var ctrl = AnimatorController.CreateAnimatorControllerAtPath(rutaCtrl);
+        AnimatorController ctrl = AnimatorController.CreateAnimatorControllerAtPath(rutaCtrl);
         ctrl.AddParameter("Velocidad", AnimatorControllerParameterType.Float);
 
-        var estado = ctrl.CreateBlendTreeInController("Locomocion", out BlendTree arbol);
+        AnimatorState estado = ctrl.CreateBlendTreeInController("Locomocion", out BlendTree arbol);
         arbol.blendParameter = "Velocidad";
         arbol.useAutomaticThresholds = false;
-        if (quieto != null) arbol.AddChild(quieto, 0f);
+        if (quieto != null)
+        {
+            arbol.AddChild(quieto, 0f);
+        }
+
         arbol.AddChild(caminar, 1f);
-        if (correr != null) arbol.AddChild(correr, 2f);
+        if (correr != null)
+        {
+            arbol.AddChild(correr, 2f);
+        }
+
         ctrl.layers[0].stateMachine.defaultState = estado;
 
         AssetDatabase.SaveAssets();
