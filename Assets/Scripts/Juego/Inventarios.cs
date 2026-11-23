@@ -16,7 +16,7 @@ public static class Inventarios
     static readonly Dictionary<string, Casilla[]> guardadas = new Dictionary<string, Casilla[]>();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void Reiniciar() => guardadas.Clear();
+    internal static void Reiniciar() => guardadas.Clear();
 
     static bool Cruza(string objeto)
     {

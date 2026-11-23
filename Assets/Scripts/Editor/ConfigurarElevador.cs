@@ -56,6 +56,8 @@ namespace GoldyPond.EditorTools
                 // La polea primero; los dos engranes del motor estan juntos y giran al reves uno del otro.
                 var viga = Buscar("Soporte_Viga");
                 e.techo = viga != null ? viga.GetComponent<Renderer>() : null;
+                e.imagenVictoria = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Imagenes/interfaz de victoria.jpeg");
+                e.prefabJefe = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Villanos/Boss.prefab");
 
                 // Las riostras (palos diagonales de los postes) se ven metidas en la jaula y la jaula las atravesaria al subir.
                 var riostras = Buscar("Soporte_Riostras");

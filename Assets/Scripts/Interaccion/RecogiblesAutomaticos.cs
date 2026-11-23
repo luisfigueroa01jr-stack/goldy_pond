@@ -184,6 +184,7 @@ public static class RecogiblesAutomaticos
             libro.nombre = "";
         }
         if (libro.imagen == null) libro.imagen = MensajesObjetos.De("Libro del laberinto");
+        libro.soloImagen = true; // el libro del niño: solo la imagen, sin marco dorado ni fondo morado
         Debug.Log($"[Goldy Pond] Libro listo: '{go.name}' -> (E) Leer" + (libro.imagen == null ? "  (OJO: no encontre la imagen \"libro del laberinto\")" : ""));
     }
 

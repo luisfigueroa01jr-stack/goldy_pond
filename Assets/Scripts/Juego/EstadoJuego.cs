@@ -34,6 +34,17 @@ public static class EstadoJuego
     /// <summary>Id del PuntoLlegada donde debe aparecer el jugador en la siguiente escena. Vacio = donde esta en la escena.</summary>
     public static string Llegada { get; set; }
 
+    /// <summary>Empezar de cero (ej. te atrapo un villano): se olvida todo lo de la partida.</summary>
+    public static void NuevaPartida()
+    {
+        Reiniciar();
+        Inventarios.Reiniciar();
+        MecanismoPines.Reiniciar();
+        LaberintoAutomatico.Reiniciar();
+        Caceria.Reiniciar();
+        VillanoLaberinto.Reiniciar();
+    }
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void Reiniciar()
     {

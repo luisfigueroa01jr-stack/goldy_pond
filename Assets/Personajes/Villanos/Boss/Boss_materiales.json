@@ -1,0 +1,15 @@
+{
+  "modelo": "Boss",
+  "altura": 3.0,
+  "alto_original": 35.40149892672025,
+  "tiene_esqueleto": false,
+  "materiales": {
+    "Boss - Aro": "aros_oro.png",
+    "Boss - Cabeza": "cuernos.png",
+    "Boss - Capa": "Capa.png",
+    "Boss - Cuerpo": "Cuerpo.png",
+    "Boss - Capa 2": "Capa.png",
+    "Boss - Patas": "Patas.png",
+    "Boss - Ropa_interior": "Ropa_interior.png"
+  }
+}

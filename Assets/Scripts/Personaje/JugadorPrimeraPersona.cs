@@ -46,6 +46,9 @@ public class JugadorPrimeraPersona : MonoBehaviour
     public static JugadorPrimeraPersona Instancia { get; private set; }
 
     CharacterController controller;
+    Estamina estamina;
+    /// <summary>La estamina (correr gasta, se recupera caminando o quieta).</summary>
+    public Estamina Estamina => estamina;
     Interactuable objetoCercano;
     string mensajeFallo;
     GameObject avisoRecoger;
@@ -84,6 +87,9 @@ public class JugadorPrimeraPersona : MonoBehaviour
         }
     }
     bool inmovil;
+
+    /// <summary>En las escenas (retumbe, el jefe que cae, el final): el mouse no mueve la camara, la mueve otro script.</summary>
+    public bool BloquearMirar { get; set; }
     public Escalera EscaleraActual => escalera;
     /// <summary>0 = pie de la escalera, 1 = hasta arriba.</summary>
     public float AlturaEnEscalera => tEscalera;
@@ -92,6 +98,8 @@ public class JugadorPrimeraPersona : MonoBehaviour
     {
         Instancia = this;
         controller = GetComponent<CharacterController>();
+        estamina = GetComponent<Estamina>();
+        if (estamina == null) estamina = gameObject.AddComponent<Estamina>();
         if (camara == null) camara = GetComponentInChildren<Camera>();
         AplicarTamano();
 
@@ -142,7 +150,16 @@ public class JugadorPrimeraPersona : MonoBehaviour
             return;
         }
         ManejarCursor();
-        Mirar();
+        if (entrandoSaliendo) return;      // metiendose o saliendo de un escondite
+        if (!BloquearMirar) Mirar();
+        if (escondite != null)
+        {
+            // Escondida: solo miras (con limite) y con E sales.
+            var tec = Keyboard.current; var ctl = Gamepad.current;
+            bool e = (tec != null && tec.eKey.wasPressedThisFrame) || (ctl != null && ctl.buttonWest.wasPressedThisFrame);
+            if (e && Cursor.lockState == CursorLockMode.Locked) StartCoroutine(SalirDelEscondite());
+            return;
+        }
         if (inmovil) { ultimaAltura = transform.position.y; return; }
         Mover();
         Interactuar();
@@ -158,6 +175,15 @@ public class JugadorPrimeraPersona : MonoBehaviour
         var control = Gamepad.current;
         bool presionoE = (teclado != null && teclado.eKey.wasPressedThisFrame)
                       || (control != null && control.buttonWest.wasPressedThisFrame);
+
+        // En la Aldea, antes de leer el libro de la plaza no se puede usar nada mas
+        // (ni recoger objetos ni abrir puertas). Empieza al cerrar el libro (primera caceria).
+        if (objetoCercano != null && Caceria.BloqueaInteracciones && !Caceria.EsLibroDeLaPlaza(objetoCercano.transform))
+        {
+            if (presionoE && Cursor.lockState == CursorLockMode.Locked)
+                Notificacion.Mostrar("Primero lee el libro del centro de la aldea");
+            objetoCercano = null;
+        }
 
         // Sin nada enfrente, pero con un objeto que trae mensaje en la mano (el pergamino): mantener E para verlo.
         var mensaje = objetoCercano == null ? MensajesObjetos.De(BarraHerramientas.Instancia?.ObjetoSeleccionado) : null;
@@ -323,8 +349,85 @@ public class JugadorPrimeraPersona : MonoBehaviour
 
         transform.Rotate(0f, delta.x, 0f);
         pitch = Mathf.Clamp(pitch - delta.y, -limiteVertical, limiteVertical);
+        if (escondite != null)
+        {
+            // Desde el escondite solo ves lo que tienes enfrente (y un poco a los lados).
+            float baseYaw = Quaternion.LookRotation(escondite.frente).eulerAngles.y;
+            float rel = Mathf.Clamp(Mathf.DeltaAngle(baseYaw, transform.eulerAngles.y), -escondite.limiteGiro, escondite.limiteGiro);
+            transform.rotation = Quaternion.Euler(0f, baseYaw + rel, 0f);
+            pitch = Mathf.Clamp(pitch, -escondite.limiteArriba, escondite.limiteAbajo);
+        }
         if (camara != null)
             camara.transform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+    }
+
+    // ---------- Escondites (armarios, debajo de la cama, detras de barriles) ----------
+
+    Escondite escondite;
+    bool entrandoSaliendo;
+    Vector3 posAntesEscondite;
+    Quaternion rotAntesEscondite;
+    float pitchAntesEscondite, nearAntes;
+
+    /// <summary>Esta escondida (en un armario, debajo de la cama...).</summary>
+    public bool Oculto => escondite != null;
+
+    /// <summary>Se mete al escondite rapidito. false si no se puede ahora.</summary>
+    public bool Ocultarse(Escondite e)
+    {
+        if (e == null || escondite != null || entrandoSaliendo || inmovil || escalera != null) return false;
+        StartCoroutine(EntrarAlEscondite(e));
+        return true;
+    }
+
+    System.Collections.IEnumerator EntrarAlEscondite(Escondite e)
+    {
+        entrandoSaliendo = true;
+        escondite = e;
+        posAntesEscondite = transform.position;
+        rotAntesEscondite = transform.rotation;
+        pitchAntesEscondite = pitch;
+        Inmovil = true;
+        if (avisoRecoger != null) avisoRecoger.SetActive(false);
+        if (camara != null) { nearAntes = camara.nearClipPlane; camara.nearClipPlane = 0.03f; } // para no "cortar" las paredes de cerca
+
+        var ojos = camara != null ? camara.transform.position - transform.position : Vector3.up * alturaOjos;
+        var desdeP = transform.position; var hastaP = e.punto - ojos;
+        var desdeR = transform.rotation; var hastaR = Quaternion.LookRotation(e.frente);
+        float desdePitch = pitch, hastaPitch = e.tipo == Escondite.Tipo.Cama ? 0f : 5f;
+        yield return Transicion(desdeP, hastaP, desdeR, hastaR, desdePitch, hastaPitch, 0.32f, true);
+
+        entrandoSaliendo = false;
+        Notificacion.Mostrar("Escondida. Presiona E para salir", null, 2.5f);
+    }
+
+    System.Collections.IEnumerator SalirDelEscondite()
+    {
+        entrandoSaliendo = true;
+        yield return Transicion(transform.position, posAntesEscondite, transform.rotation, rotAntesEscondite,
+                                pitch, Mathf.Clamp(pitchAntesEscondite, -20f, 20f), 0.28f, false);
+        if (camara != null) camara.nearClipPlane = nearAntes;
+        escondite = null;
+        Inmovil = false;
+        entrandoSaliendo = false;
+    }
+
+    /// <summary>Movimiento rapido con frenado al final y un pequeno "agachon" a medio camino.</summary>
+    System.Collections.IEnumerator Transicion(Vector3 p0, Vector3 p1, Quaternion r0, Quaternion r1, float pitch0, float pitch1, float duracion, bool entrando)
+    {
+        float t = 0f;
+        while (t < 1f)
+        {
+            t = Mathf.Min(1f, t + Time.deltaTime / duracion);
+            float k = 1f - Mathf.Pow(1f - t, 3f);
+            float agachon = Mathf.Sin(t * Mathf.PI) * 0.12f;
+            transform.SetPositionAndRotation(Vector3.Lerp(p0, p1, k) + Vector3.down * agachon, Quaternion.Slerp(r0, r1, k));
+            pitch = Mathf.Lerp(pitch0, pitch1, k);
+            if (camara != null) camara.transform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+            Escondite.Oscurecer(entrando ? k * 0.85f : (1f - k) * 0.85f);
+            yield return null;
+        }
+        ultimaAltura = transform.position.y;
     }
 
     // ---------- Escalera de mano ----------
@@ -403,11 +506,16 @@ public class JugadorPrimeraPersona : MonoBehaviour
     {
         entrada = LeerMovimiento();
         if (escalera != null) { Escalar(); return; }
-        bool corriendo = accionCorrer != null ? accionCorrer.IsPressed()
-                       : Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed;
+        bool quiereCorrer = accionCorrer != null ? accionCorrer.IsPressed()
+                          : Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed;
+        bool seMueve = entrada.sqrMagnitude > 0.01f;
+        // Correr gasta estamina; sin estamina (agotada) no se puede correr y se camina mas lento.
+        bool corriendo = quiereCorrer && seMueve && estamina.PuedeCorrer;
+        estamina.Avisar(corriendo, seMueve);
+        float caminar = estamina.Activa && estamina.Agotada ? velocidadCaminar * estamina.caminarAgotada : velocidadCaminar;
 
         Vector3 deseada = (transform.right * entrada.x + transform.forward * entrada.y)
-                          * (corriendo ? velocidadCorrer : velocidadCaminar);
+                          * (corriendo ? velocidadCorrer : caminar);
         velocidadPlano = Vector3.MoveTowards(velocidadPlano, deseada, aceleracion * Time.deltaTime);
 
         if (controller.isGrounded)
@@ -415,7 +523,7 @@ public class JugadorPrimeraPersona : MonoBehaviour
             if (velocidadVertical < 0f) velocidadVertical = -2f;
             bool saltar = accionSaltar != null ? accionSaltar.WasPressedThisFrame()
                         : Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
-            if (saltar) velocidadVertical = Mathf.Sqrt(alturaSalto * -2f * gravedad);
+            if (saltar && (!estamina.Activa || estamina.Saltar())) velocidadVertical = Mathf.Sqrt(alturaSalto * -2f * gravedad);
         }
         velocidadVertical += gravedad * Time.deltaTime;
 

@@ -26,7 +26,7 @@ public static class LaberintoAutomatico
     // Unity puede tener apagado "Reload Domain": sin esto, en el segundo Play se acordaba del laberinto
     // del Play anterior y ya no le ponia puertas, cajones, luces ni el mecanismo.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void Reiniciar() => laberintos.Clear();
+    internal static void Reiniciar() => laberintos.Clear();
 
     public static void Preparar(Scene escena)
     {
@@ -93,8 +93,24 @@ public static class LaberintoAutomatico
             Debug.Log("[Goldy Pond] Mecanismo de los 3 pines listo (orden: 1 Sol, 2 Flor, 3 Luna).");
         }
 
-        if (puertas + cajones + luces > 0)
-            Debug.Log($"[Goldy Pond] Laberinto '{raiz.name}' en '{raiz.gameObject.scene.name}': {puertas} puertas, {cajones} cajones, {luces} luces.");
+        int escondites = Escondite.PrepararEn(raiz);
+
+        if (puertas + cajones + luces + escondites > 0)
+            Debug.Log($"[Goldy Pond] Laberinto '{raiz.name}' en '{raiz.gameObject.scene.name}': {puertas} puertas, {cajones} cajones, {luces} luces, {escondites} escondites.");
+    }
+
+    /// <summary>El laberinto donde esta el punto (o null) y sus limites.</summary>
+    public static Transform RaizQueContiene(Vector3 p, out Bounds limites)
+    {
+        foreach (var d in laberintos)
+        {
+            if (d.raiz == null) continue;
+            var b = d.limites;
+            b.Expand(new Vector3(5f, 2f, 5f));
+            if (b.Contains(p)) { limites = d.limites; return d.raiz; }
+        }
+        limites = default;
+        return null;
     }
 
     /// <summary>Hay un laberinto en esta escena.</summary>

@@ -31,10 +31,16 @@ public class PanelLectura : MonoBehaviour
     float abiertoDesde;
     bool sostener;
 
+    /// <summary>Se avisa cada vez que se cierra (la Caceria empieza al cerrar el libro de la plaza).</summary>
+    public static event System.Action Cerrado;
+
     public static void Abrir(Sprite sprite) => Abrir(sprite, false);
 
     /// <summary>sostener = true: se ve solo mientras mantienes E (sin boton X ni cursor).</summary>
-    public static void Abrir(Sprite sprite, bool sostener)
+    public static void Abrir(Sprite sprite, bool sostener) => Abrir(sprite, sostener, false);
+
+    /// <summary>soloImagen = true: sin marco, sin fondo oscuro y sin X; se cierra con E o Esc.</summary>
+    public static void Abrir(Sprite sprite, bool sostener, bool soloImagen)
     {
         if (sprite == null) { Debug.LogWarning("[Goldy Pond] El libro no tiene imagen asignada."); return; }
         if (instancia == null && !Crear()) return;
@@ -43,20 +49,21 @@ public class PanelLectura : MonoBehaviour
         i.imagen.sprite = sprite;
         float aspecto = sprite.rect.width / sprite.rect.height;
         // Modo pergamino (sostener): solo la imagen, sin fondo oscuro, sin marco y sin sombra.
-        float m = sostener ? 0f : Marco;
-        i.fondo.enabled = !sostener;
-        i.marco.enabled = !sostener;
-        i.sombra.enabled = !sostener;
+        bool sinAdornos = sostener || soloImagen;
+        float m = sinAdornos ? 0f : Marco;
+        i.fondo.enabled = !sinAdornos;
+        i.marco.enabled = !sinAdornos;
+        i.sombra.enabled = !sinAdornos;
         i.rtImagen.offsetMin = new Vector2(m, m);
         i.rtImagen.offsetMax = new Vector2(-m, -m);
         i.hoja.sizeDelta = new Vector2(AltoImagen * aspecto + m * 2f, AltoImagen + m * 2f);
         i.abiertoDesde = Time.unscaledTime;
         i.sostener = sostener;
-        i.botonX.gameObject.SetActive(!sostener);
+        i.botonX.gameObject.SetActive(!sinAdornos);
         i.gameObject.SetActive(true);
         i.transform.SetAsLastSibling();
 
-        if (sostener) return; // el cursor se queda escondido
+        if (sinAdornos) return; // el cursor se queda escondido
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -68,6 +75,7 @@ public class PanelLectura : MonoBehaviour
         cuadroCerrado = Time.frameCount;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        Cerrado?.Invoke();
     }
 
     void Update()
@@ -88,7 +96,7 @@ public class PanelLectura : MonoBehaviour
         }
 
         var mouse = Mouse.current;
-        bool sobreX = mouse != null && RectTransformUtility.RectangleContainsScreenPoint(botonX, mouse.position.ReadValue(), null);
+        bool sobreX = mouse != null && botonX.gameObject.activeSelf && RectTransformUtility.RectangleContainsScreenPoint(botonX, mouse.position.ReadValue(), null);
         botonX.localScale = Vector3.one * (sobreX ? 1.12f : 1f);
 
         bool cerrar = (teclado != null && (teclado.eKey.wasPressedThisFrame || teclado.escapeKey.wasPressedThisFrame))

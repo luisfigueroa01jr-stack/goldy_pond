@@ -1168,6 +1168,8 @@ MonoBehaviour:
   segundosAntesDeNegro: 5
   duracionNegro: 1.5
   giroEngranes: 120
+  imagenVictoria: {fileID: 2800000, guid: 36e76d4dd6f73bedab7d4439766fe866, type: 3}
+  prefabJefe: {fileID: 5420252682842941593, guid: 18862741ba30396eea984e38faf72889, type: 3}
 --- !u!4 &2699310379769531804 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8092313225031235992, guid: d5ecaf05c09dbd241bdff80439da0c64, type: 3}

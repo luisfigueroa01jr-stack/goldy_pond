@@ -1,0 +1,18 @@
+{
+  "modelo": "Villana1",
+  "altura": 1.9,
+  "alto_original": 21.763105882228047,
+  "tiene_esqueleto": true,
+  "materiales": {
+    "Villana1 - Cuernos1": "Cuernos1.png",
+    "Villana1 - Capa_cabeza": "Capa_cabeza.png",
+    "Villana1 - Hilo_Cuernos": "Hilo_Cuernos.png",
+    "Villana1 - Campana_cuernos": "Campana_cuernos.png",
+    "Villana1 - Cuerpo": "Cuerpo.png",
+    "Villana1 - Ropa_arriba": "Ropa_arriba.png",
+    "Villana1 - Falda_exterior": "Falda_exterior.png",
+    "Villana1 - Falda_interior": "Falda_interior.png",
+    "Villana1 - Capa_larga": "Capa_larga.png",
+    "Villana1 - Arma_campana": "Arma_campana.png"
+  }
+}

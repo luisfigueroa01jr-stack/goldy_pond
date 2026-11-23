@@ -30,7 +30,7 @@ public class MecanismoPines : MonoBehaviour
     // Lo que ya estaba puesto, por si se recarga la escena (ej. vas al subterraneo y regresas).
     static readonly Dictionary<string, string[]> memoria = new Dictionary<string, string[]>();
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void Reiniciar() => memoria.Clear(); // cada Play empieza con el mecanismo vacio
+    internal static void Reiniciar() => memoria.Clear(); // cada Play empieza con el mecanismo vacio
 
     string Clave => $"{gameObject.scene.name}:{transform.position}";
 

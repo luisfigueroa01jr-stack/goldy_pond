@@ -1,0 +1,16 @@
+{
+  "modelo": "Villana2",
+  "altura": 1.9,
+  "alto_original": 28.549457080660602,
+  "tiene_esqueleto": false,
+  "materiales": {
+    "Villana2 - Cabeza": "cuernos.png",
+    "Villana2 - Capa": "Capa.png",
+    "Villana2 - Capa_larga": "Capa_larga.png",
+    "Villana2 - Cuerpo": "Cuerpo.png",
+    "Villana2 - Flor": "Flor.png",
+    "Villana2 - Pantalon": "Pantalon.png",
+    "Villana2 - Patas": "Patas.png",
+    "Villana2 - Ropa_arriba": "Ropa_arriba.png"
+  }
+}

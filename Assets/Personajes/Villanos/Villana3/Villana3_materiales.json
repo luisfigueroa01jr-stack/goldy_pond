@@ -1,0 +1,13 @@
+{
+  "modelo": "Villana3",
+  "altura": 1.9,
+  "alto_original": 28.46202469611633,
+  "tiene_esqueleto": false,
+  "materiales": {
+    "Villana3 - Cabeza": "Cabeza.png",
+    "Villana3 - Capa": "Capa.png",
+    "Villana3 - Cuerpo": "Cuerpo.png",
+    "Villana3 - Hoja": "hojas_ajustada.png",
+    "Villana3 - Patas": "Patas.png"
+  }
+}
