@@ -12,6 +12,11 @@ public class Libro : Interactuable
     [Tooltip("Mostrar solo la imagen: sin marco dorado, sin fondo oscuro y sin boton X (se cierra con E o Esc).")]
     public bool soloImagen;
 
+    [Header("Sonido")]
+    public AudioClip sonidoAlAbrir;
+    [Range(0f, 1f)]
+    public float volumenSonido = 0.8f;
+
     private static Sprite ojo;
 
     // El ultimo libro que se abrio (lo usa la Caceria: al cerrar el libro de la plaza empieza).
@@ -22,6 +27,12 @@ public class Libro : Interactuable
 
     public override bool interactuar(Transform jugador)
     {
+        if (sonidoAlAbrir != null)
+        {
+            Vector3 posicion = jugador != null ? jugador.position : transform.position;
+            AudioSource.PlayClipAtPoint(sonidoAlAbrir, posicion, volumenSonido * ConfiguracionSonido.VolumenJuego);
+        }
+
         UltimoLeido = this;
         PanelLectura.abrirPanel(imagen, false, soloImagen);
         return true;

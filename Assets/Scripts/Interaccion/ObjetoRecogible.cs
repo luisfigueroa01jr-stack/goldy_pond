@@ -15,6 +15,12 @@ public class ObjetoRecogible : Interactuable
     [Tooltip("Lo que sale si intentas recoger otro teniendo ya uno. Vacio = mensaje automatico.")]
     public string mensajeYaTienes = "";
 
+    [Header("Sonido")]
+    public AudioClip sonidoAlRecoger;
+    [Range(0f, 1f)]
+    public float volumenSonido = 0.8f;
+    
+
     private string fallo = "La barra esta llena";
 
     public override string TextoAccion => $"Recoger <color=#FFDFA0>{nombre}</color>";
@@ -45,6 +51,11 @@ public class ObjetoRecogible : Interactuable
         {
             fallo = "La barra esta llena";
             return false;
+        }
+
+        if (sonidoAlRecoger != null)
+        {
+            AudioSource.PlayClipAtPoint(sonidoAlRecoger, transform.position, volumenSonido * ConfiguracionSonido.VolumenJuego);
         }
 
         ObjetoEnMano.registrar(nombre, gameObject); // para verlo en la mano y poder ponerlo en otros lados

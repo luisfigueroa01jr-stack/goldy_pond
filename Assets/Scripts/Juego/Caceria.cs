@@ -65,6 +65,9 @@ public class Caceria : MonoBehaviour
     [Header("Musica de la caceria")]
     [Tooltip("Si esta vacio usa Assets/Resources/Musica/Caceria (mp3, ogg o wav).")]
     public AudioClip musicaCaceria;
+    [Range(0f, 1f)]
+    public float volumenMusicaCaceria = 0.25f;
+
 
     // La reja ya subio lo suficiente y los villanos estan saliendo.
     public bool Liberados => liberados;
@@ -72,6 +75,9 @@ public class Caceria : MonoBehaviour
     private AudioSource musica;
     private RelojCaceria reloj;
     private Coroutine fundidoMusica;
+    private AudioSource audioAmbiente;
+    private float volumenAmbienteOriginal = 0.15f;
+
 
     private const string ESCENA_INICIO = "MenuPrincipal";
     private static readonly Regex PatronVillano = new Regex(@"^(Boss|Villana\d)( \(\d+\))?$");
@@ -242,6 +248,11 @@ public class Caceria : MonoBehaviour
     {
         yield return null; // que primero se preparen puertas, recogibles, etc.
 
+         if (pendientes == null)
+        {
+            pendientes = buscarVillanos(gameObject.scene);
+        }
+
         buscarReja();
         buscarRefugios();
         List<Transform> raices = new List<Transform>();
@@ -337,6 +348,17 @@ public class Caceria : MonoBehaviour
 
             liberados = true;
         }
+
+        GameObject objAmbiente = GameObject.Find("Ambiente");
+        if (objAmbiente != null)
+        {
+            audioAmbiente = objAmbiente.GetComponent<AudioSource>();
+            if (audioAmbiente != null)
+            {
+                volumenAmbienteOriginal = audioAmbiente.volume;
+            }
+        }
+
 
         buscarPortalAldea();
 
@@ -781,29 +803,41 @@ public class Caceria : MonoBehaviour
 
     private IEnumerator fundirMusica(bool tocar)
     {
-        float volumen = ConfiguracionSonido.VolumenJuego;
-        if (tocar)
-        {
-            musica.volume = volumen;
-            if (!musica.isPlaying)
-            {
-                musica.time = 0f;
-                musica.Play();
-            }
+        float volumenCaceriaObjetivo = tocar ? (ConfiguracionSonido.VolumenJuego * volumenMusicaCaceria) : 0f;
+        float volumenAmbienteObjetivo = tocar ? 0f : volumenAmbienteOriginal;
 
-            yield break;
+        if (tocar && musica != null && musica.clip != null && !musica.isPlaying)
+        {
+            musica.time = 0f;
+            musica.Play();
         }
 
-        float desde = musica.volume, t = 0f;
+        float desdeCaceria = musica != null ? musica.volume : 0f;
+        float desdeAmbiente = audioAmbiente != null ? audioAmbiente.volume : 0f;
+        float t = 0f;
+
         while (t < 1f)
         {
-            t = Mathf.Min(1f, t + Time.deltaTime / 2.5f);
-            musica.volume = Mathf.Lerp(desde, 0f, t);
+            t = Mathf.Min(1f, t + Time.deltaTime / 2.5f); // 2.5 segundos de transición
+            if (musica != null)
+            {
+                musica.volume = Mathf.Lerp(desdeCaceria, volumenCaceriaObjetivo, t);
+            }
+            if (audioAmbiente != null)
+            {
+                audioAmbiente.volume = Mathf.Lerp(desdeAmbiente, volumenAmbienteObjetivo, t);
+            }
             yield return null;
         }
 
-        musica.Stop();
+        if (!tocar && musica != null)
+        {
+            musica.Stop();
+        }
+
+        fundidoMusica = null;
     }
+
 
     private Coroutine rejaMoviendose;
 
@@ -984,7 +1018,15 @@ public class Caceria : MonoBehaviour
 
         if (musicaActiva && musica != null && musica.isPlaying && (fundidoMusica == null || musica.volume > 0.001f || enLaberinto))
         {
-            musica.volume = Mathf.MoveTowards(musica.volume, enLaberinto ? 0f : ConfiguracionSonido.VolumenJuego, Time.deltaTime * 1.5f);
+            float volObjetivo = enLaberinto ? 0f : (ConfiguracionSonido.VolumenJuego * volumenMusicaCaceria);
+            musica.volume = Mathf.MoveTowards(musica.volume, volObjetivo, Time.deltaTime * 1.5f);
+        }
+
+        if (audioAmbiente != null && fundidoMusica == null)
+        {
+            bool debeSonarAmbiente = !musicaActiva || enLaberinto;
+            float objAmb = debeSonarAmbiente ? volumenAmbienteOriginal : 0f;
+            audioAmbiente.volume = Mathf.MoveTowards(audioAmbiente.volume, objAmb, Time.deltaTime * 0.5f);
         }
 
         switch (FaseActual)
@@ -1136,7 +1178,15 @@ public class Caceria : MonoBehaviour
     {
         if (musicaActiva && musica != null && musica.isPlaying && (fundidoMusica == null || musica.volume > 0.001f || enLaberinto))
         {
-            musica.volume = Mathf.MoveTowards(musica.volume, enLaberinto ? 0f : ConfiguracionSonido.VolumenJuego, Time.deltaTime * 1.5f);
+            float volObjetivo = enLaberinto ? 0f : (ConfiguracionSonido.VolumenJuego * volumenMusicaCaceria);
+            musica.volume = Mathf.MoveTowards(musica.volume, volObjetivo, Time.deltaTime * 1.5f);
+        }
+
+        if (audioAmbiente != null && fundidoMusica == null)
+        {
+            bool debeSonarAmbiente = !musicaActiva || enLaberinto;
+            float objAmb = debeSonarAmbiente ? volumenAmbienteOriginal : 0f;
+            audioAmbiente.volume = Mathf.MoveTowards(audioAmbiente.volume, objAmb, Time.deltaTime * 0.5f);
         }
 
         if (!liberados || jefe == null)
