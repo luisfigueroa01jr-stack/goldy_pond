@@ -1165,6 +1165,59 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 36ac94b3a771a781a9d87ebf2dd3819b, type: 3}
+--- !u!1 &312457963
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 312457965}
+  - component: {fileID: 312457964}
+  m_Layer: 0
+  m_Name: LuciernagasAmbiente
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &312457964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 312457963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b716c5ece35ba8d4c976a9ea560ad740, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LuciernagasAmbiente
+  cantidadLuciernagas: 120
+  tamanoArea: {x: 45, y: 8, z: 45}
+  colorLuciernaga: {r: 1, g: 0.85, b: 0.22, a: 1}
+  intensidadBrillo: 2.6
+  tamanoMinimo: 0.04
+  tamanoMaximo: 0.11
+  direccionViento: {x: 0.4, y: 0.12, z: 0.25}
+  turbulencia: 0.45
+  duracionCiclo: 4.5
+--- !u!4 &312457965
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 312457963}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 670983600}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &322035423
 GameObject:
   m_ObjectHideFlags: 0
@@ -1412,8 +1465,16 @@ MonoBehaviour:
   cantidad: 1
   soloUnoALaVez: 0
   mensajeYaTienes: 
-  sonidoAlRecoger: {fileID: 0}
+  sonidoAlRecoger: {fileID: 8300000, guid: 833e13722526aad44ab317e54faa33ef, type: 3}
   volumenSonido: 0.8
+  sonidoCercania: {fileID: 8300000, guid: 38d237b296bf83d4296eede7dc004027, type: 3}
+  volumenCercania: 0.6
+  distanciaMinima: 1.5
+  distanciaMaxima: 12
+  activarLuzGuia: 1
+  colorLuzGuia: {r: 1, g: 0.82, b: 0.25, a: 1}
+  radioLuz: 3.5
+  velocidadPulso: 2.2
 --- !u!65 &351969492
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1883,8 +1944,16 @@ MonoBehaviour:
   cantidad: 1
   soloUnoALaVez: 0
   mensajeYaTienes: 
-  sonidoAlRecoger: {fileID: 0}
+  sonidoAlRecoger: {fileID: 8300000, guid: 833e13722526aad44ab317e54faa33ef, type: 3}
   volumenSonido: 0.8
+  sonidoCercania: {fileID: 8300000, guid: 38d237b296bf83d4296eede7dc004027, type: 3}
+  volumenCercania: 0.6
+  distanciaMinima: 1.5
+  distanciaMaxima: 12
+  activarLuzGuia: 1
+  colorLuzGuia: {r: 1, g: 0.82, b: 0.25, a: 1}
+  radioLuz: 3.5
+  velocidadPulso: 2.2
 --- !u!65 &467457732
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2762,6 +2831,38 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!1 &670983599
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 670983600}
+  m_Layer: 0
+  m_Name: LuciernagasMapa
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &670983600
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 670983599}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4, y: 1.56755, z: -2.125}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 312457965}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &742493276 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 1c47ccfc848485be3b4939be815c7351, type: 3}
@@ -2784,8 +2885,16 @@ MonoBehaviour:
   cantidad: 1
   soloUnoALaVez: 0
   mensajeYaTienes: 
-  sonidoAlRecoger: {fileID: 0}
+  sonidoAlRecoger: {fileID: 8300000, guid: 833e13722526aad44ab317e54faa33ef, type: 3}
   volumenSonido: 0.8
+  sonidoCercania: {fileID: 8300000, guid: 38d237b296bf83d4296eede7dc004027, type: 3}
+  volumenCercania: 0.6
+  distanciaMinima: 1.5
+  distanciaMaxima: 12
+  activarLuzGuia: 1
+  colorLuzGuia: {r: 1, g: 0.82, b: 0.25, a: 1}
+  radioLuz: 3.5
+  velocidadPulso: 2.2
 --- !u!65 &742493278
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3188,6 +3297,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.z
       value: -6.225
       objectReference: {fileID: 0}
+    - target: {fileID: 3387363907531560220, guid: 7e60d8c08bad44dd3b7dd6d69b44a572, type: 3}
+      propertyPath: sonidoAbrir
+      value: 
+      objectReference: {fileID: 8300000, guid: b80b8d6cc3098d7488480c6c1b82d546, type: 3}
+    - target: {fileID: 3387363907531560220, guid: 7e60d8c08bad44dd3b7dd6d69b44a572, type: 3}
+      propertyPath: sonidoCerrar
+      value: 
+      objectReference: {fileID: 8300000, guid: 5187d2e56afaa4e40a64694bea5b24db, type: 3}
     - target: {fileID: 3488002491255387602, guid: 7e60d8c08bad44dd3b7dd6d69b44a572, type: 3}
       propertyPath: m_LocalPosition.x
       value: -38.71942
@@ -4309,8 +4426,16 @@ MonoBehaviour:
   cantidad: 1
   soloUnoALaVez: 0
   mensajeYaTienes: 
-  sonidoAlRecoger: {fileID: 0}
+  sonidoAlRecoger: {fileID: 8300000, guid: 833e13722526aad44ab317e54faa33ef, type: 3}
   volumenSonido: 0.8
+  sonidoCercania: {fileID: 8300000, guid: 38d237b296bf83d4296eede7dc004027, type: 3}
+  volumenCercania: 0.6
+  distanciaMinima: 1.5
+  distanciaMaxima: 12
+  activarLuzGuia: 1
+  colorLuzGuia: {r: 1, g: 0.82, b: 0.25, a: 1}
+  radioLuz: 3.5
+  velocidadPulso: 2.2
 --- !u!65 &1083109992
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5024,8 +5149,16 @@ MonoBehaviour:
   cantidad: 1
   soloUnoALaVez: 0
   mensajeYaTienes: 
-  sonidoAlRecoger: {fileID: 8300000, guid: 582ec899136360341baf3c2d33e34771, type: 3}
+  sonidoAlRecoger: {fileID: 8300000, guid: ce89a66d20c9e374589d2ce85f904115, type: 3}
   volumenSonido: 0.8
+  sonidoCercania: {fileID: 0}
+  volumenCercania: 0.6
+  distanciaMinima: 1.5
+  distanciaMaxima: 12
+  activarLuzGuia: 1
+  colorLuzGuia: {r: 1, g: 0.82, b: 0.25, a: 1}
+  radioLuz: 3.5
+  velocidadPulso: 2.2
 --- !u!65 &1219946557
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5912,8 +6045,16 @@ MonoBehaviour:
   cantidad: 1
   soloUnoALaVez: 0
   mensajeYaTienes: 
-  sonidoAlRecoger: {fileID: 0}
+  sonidoAlRecoger: {fileID: 8300000, guid: 833e13722526aad44ab317e54faa33ef, type: 3}
   volumenSonido: 0.8
+  sonidoCercania: {fileID: 8300000, guid: 38d237b296bf83d4296eede7dc004027, type: 3}
+  volumenCercania: 0.6
+  distanciaMinima: 1.5
+  distanciaMaxima: 12
+  activarLuzGuia: 1
+  colorLuzGuia: {r: 1, g: 0.82, b: 0.25, a: 1}
+  radioLuz: 3.5
+  velocidadPulso: 2.2
 --- !u!65 &1574798640
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -7691,3 +7832,4 @@ SceneRoots:
   - {fileID: 790627287}
   - {fileID: 960819246}
   - {fileID: 831437295}
+  - {fileID: 670983600}
